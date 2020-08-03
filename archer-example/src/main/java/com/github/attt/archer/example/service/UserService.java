@@ -90,7 +90,7 @@ public interface UserService {
      *
      * @param userIds
      */
-    @EvictMulti(elementKey = "#userIds$each")
+    @EvictMulti(elementKey = "#userIds.size()")
     void deleteUsers(List<Long> userIds);
 
     /**
