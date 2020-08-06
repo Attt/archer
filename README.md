@@ -1,5 +1,5 @@
 
-# ![logo](./doc/img/archer_150.png) Archer ![version](https://img.shields.io/badge/version-1.0-SNAPSHOT-ff69b4) 
+# ![logo](./doc/img/archer_150.png) Archer ![version](https://img.shields.io/badge/version-1.0-rc1-ff69b4) 
 
 - [介绍](#介绍)
 - [入门](#入门)
