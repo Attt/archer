@@ -107,7 +107,7 @@ public class ReflectionUtil extends Reflections {
         if (basePackage.length == 0) {
             basePackage = new String[]{"."};
         }
-        reflections = new ReflectionUtil(
+        reflections = new ReflectionUtil (
                 new ConfigurationBuilder()
                         .addClassLoader(ReflectionUtil.class.getClassLoader())
                         .forPackages(basePackage)
@@ -141,7 +141,7 @@ public class ReflectionUtil extends Reflections {
 
         // init types
         for (Class<Annotation> annotationClass : CACHE_CLASS_ANNOTATIONS) {
-            Set<Class<?>> annotatedTypes = reflections.getTypesAnnotatedWith(annotationClass);
+            Set<Class<?>> annotatedTypes = reflections.getTypesAnnotatedWith(annotationClass, true);
             for (Class type : annotatedTypes) {
                 String signature = type.getName();
                 Annotation annotation = type.getAnnotation(annotationClass);
@@ -418,19 +418,6 @@ public class ReflectionUtil extends Reflections {
      */
     public static boolean findAnyCacheAnnotation(Method method) {
         return getCacheAnnotations(method).size() > 0;
-    }
-
-    // todo
-    public static List<Field> findFieldsWithAnnotation(Class<?> clazz, Class<? extends Annotation> annotation) {
-        List<Field> fieldList = new ArrayList<>();
-        Field[] fields = clazz.getDeclaredFields();
-        for (Field field : fields) {
-            Annotation declaredAnnotation = field.getDeclaredAnnotation(annotation);
-            if (declaredAnnotation != null) {
-                fieldList.add(field);
-            }
-        }
-        return fieldList;
     }
 
     public static String parametersAsString(Method method) {

@@ -14,6 +14,7 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.atomic.AtomicLong;
 import java.util.stream.Collectors;
 
 /**
@@ -143,7 +144,7 @@ public class InfoPrinter {
         return ori;
     }
 
-    private static String percentage(long hit, long total) {
+    public static String percentage(long hit, long total) {
         if (hit == 0) {
             return "0%";
         }
@@ -151,4 +152,11 @@ public class InfoPrinter {
         return result.toString() + "%";
     }
 
+    public static String percentage(AtomicLong hit, AtomicLong total) {
+        if (hit == null || hit.get() == 0L) {
+            return "0%";
+        }
+        BigDecimal result = BigDecimal.valueOf(hit.get()).divide(BigDecimal.valueOf(total.get()), 2, RoundingMode.CEILING).multiply(BigDecimal.valueOf(100));
+        return result.toString() + "%";
+    }
 }

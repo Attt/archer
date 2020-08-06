@@ -70,7 +70,9 @@ public class ObjectProcessor<V> extends AbstractProcessor<ObjectCacheOperation<V
     @Override
     public Map<InvocationContext, V> getAll(List<InvocationContext> invocationContexts, ObjectCacheOperation<V> cacheOperation) {
         ObjectCacheMetadata metadata = cacheOperation.getMetadata();
-
+        if (CommonUtils.isEmpty(invocationContexts)) {
+            return new LinkedHashMap<>();
+        }
 
         logger.debug("GetAll invocation context {}", Arrays.toString(invocationContexts.toArray()));
         Map<InvocationContext, Cache.Entry> resultEntryMap = new LinkedHashMap<>(invocationContexts.size());
