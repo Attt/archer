@@ -126,7 +126,7 @@ public class ListProcessor<V> extends AbstractProcessor<ListCacheOperation<V>, C
                 elementCacheKeys.add(elementKey);
             }
             cache.putAllIfAbsent(elements, cacheOperation.getCacheEventCollector());
-            cache.put(key, cache.wrap(key, cacheOperation.getElementCacheKeySerializer().serialize(elementCacheKeys), metadata.getExpirationInMillis()), cacheOperation.getCacheEventCollector());
+            cache.put(key, cache.wrap(key, cacheOperation.getElementCacheKeySerializer().serialize(elementCacheKeys), metadata.getElementExpirationInMillis()), cacheOperation.getCacheEventCollector());
         }
     }
 

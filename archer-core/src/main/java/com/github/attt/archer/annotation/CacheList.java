@@ -51,6 +51,16 @@ public @interface CacheList {
     TimeUnit expirationTimeUnit() default TimeUnit.SECONDS;
 
     /**
+     * Expiration for element
+     */
+    long elementExpiration() default 3600 * 24 * 7;
+
+    /**
+     * Expiration time unit for element
+     */
+    TimeUnit elementExpirationTimeUnit() default TimeUnit.SECONDS;
+
+    /**
      * Enable cache breakdown protect
      */
     boolean breakdownProtect() default true;

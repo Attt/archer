@@ -17,6 +17,8 @@ public class ListCacheMetadata extends CacheMetadata {
 
     private String elementKeyGenerator;
 
+    private Long elementExpirationInMillis;
+
     public String getElementValueSerializer() {
         return elementValueSerializer;
     }
@@ -41,12 +43,21 @@ public class ListCacheMetadata extends CacheMetadata {
         this.elementKeyGenerator = elementKeyGenerator;
     }
 
+    public Long getElementExpirationInMillis() {
+        return elementExpirationInMillis;
+    }
+
+    public void setElementExpirationInMillis(Long elementExpirationInMillis) {
+        this.elementExpirationInMillis = elementExpirationInMillis;
+    }
+
     @Override
     public String toString() {
         return "ListCacheMetadata{" +
                 "elementValueSerializer='" + elementValueSerializer + '\'' +
                 ", elementKey='" + elementKey + '\'' +
                 ", elementKeyGenerator='" + elementKeyGenerator + '\'' +
+                ", elementExpirationInMillis=" + elementExpirationInMillis +
                 ", expirationInMillis=" + expirationInMillis +
                 ", breakdownProtect=" + breakdownProtect +
                 ", breakdownProtectTimeoutInMillis=" + breakdownProtectTimeoutInMillis +

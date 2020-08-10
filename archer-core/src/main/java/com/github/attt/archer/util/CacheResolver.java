@@ -139,6 +139,7 @@ public class CacheResolver {
         metadata.setInvokeAnyway(cacheList.overwrite());
         metadata.setElementValueSerializer(resolveValue(valueSerializer, cacheList.elementValueSerializer()));
         metadata.setExpirationInMillis(cacheList.expirationTimeUnit().toMillis(cacheList.expiration()));
+        metadata.setElementExpirationInMillis(cacheList.elementExpirationTimeUnit().toMillis(cacheList.elementExpiration()));
         metadata.setBreakdownProtect(cacheList.breakdownProtect());
         metadata.setBreakdownProtectTimeoutInMillis(cacheList.breakdownProtectTimeUnit().toMillis(cacheList.breakdownProtectTimeout()));
         return metadata;
