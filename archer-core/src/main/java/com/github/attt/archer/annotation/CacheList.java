@@ -27,6 +27,20 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
 public @interface CacheList {
 
     /**
+     * Cache area
+     * <p>
+     * Isolate caches
+     */
+    String area() default "";
+
+    /**
+     * Element cache area
+     * <p>
+     * Specify which area this cached elements stored in
+     */
+    String elementArea() default "";
+
+    /**
      * Cache key
      * <p>
      * Support Spring Expression Language (SpEL)

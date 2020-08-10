@@ -24,4 +24,6 @@ public interface Processor<CONTEXT, OPERATION, V> {
     void delete(CONTEXT context, OPERATION cacheOperation);
 
     void deleteAll(List<CONTEXT> contextList, OPERATION cacheOperation);
+
+    void deleteAll(OPERATION cacheOperation);
 }

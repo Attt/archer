@@ -25,6 +25,13 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
 public @interface CacheMulti {
 
     /**
+     * Element cache area
+     * <p>
+     * Specify which area this cached elements stored in
+     */
+    String elementArea() default "";
+
+    /**
      * Element cache key
      * <p>
      * Support Spring Expression Language (SpEL)

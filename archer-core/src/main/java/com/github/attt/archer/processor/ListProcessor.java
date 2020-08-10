@@ -40,7 +40,7 @@ public class ListProcessor<V> extends AbstractProcessor<ListCacheOperation<V>, C
         // fetch all object cache keys
         List<String> allCacheKeys;
         String key = generateCacheKey(context, metadata);
-        Cache.Entry entry = cache.get(key, cacheOperation.getCacheEventCollector());
+        Cache.Entry entry = cache.get(metadata.getArea(), key, cacheOperation.getCacheEventCollector());
         if (entry == null) {
             // cache is missing
             cacheOperation.getCacheEventCollector().collect(new CacheMissEvent());
@@ -61,7 +61,7 @@ public class ListProcessor<V> extends AbstractProcessor<ListCacheOperation<V>, C
         }
 
         // fetch all object
-        Map<String, Cache.Entry> allObjects = cache.getAll(allCacheKeys, cacheOperation.getCacheEventCollector());
+        Map<String, Cache.Entry> allObjects = cache.getAll(metadata.getElementArea(), allCacheKeys, cacheOperation.getCacheEventCollector());
 
         Map<String, V> resultMap = new HashMap<>(allCacheKeys.size());
         for (Map.Entry<String, Cache.Entry> cacheEntry : allObjects.entrySet()) {
@@ -113,20 +113,20 @@ public class ListProcessor<V> extends AbstractProcessor<ListCacheOperation<V>, C
         ListCacheMetadata metadata = cacheOperation.getMetadata();
         logger.debug("Put invocation context {}", context);
 
-        String key = generateCacheKey(context, cacheOperation.getMetadata());
+        String key = generateCacheKey(context, metadata);
 
         if (values == null) {
-            cache.put(key, cache.wrap(key, null, metadata.getExpirationInMillis()), cacheOperation.getCacheEventCollector());
+            cache.put(metadata.getArea(), key, cache.wrap(metadata.getArea(), key, null, metadata.getExpirationInMillis()), cacheOperation.getCacheEventCollector());
         } else {
             List<String> elementCacheKeys = new ArrayList<>();
             Map<String, Cache.Entry> elements = new HashMap<>();
             for (V value : values) {
                 String elementKey = generateElementCacheKey(context, cacheOperation.getMetadata(), values, value);
-                elements.put(elementKey, cache.wrap(elementKey, cacheOperation.getValueSerializer().serialize(value), metadata.getExpirationInMillis()));
+                elements.put(elementKey, cache.wrap(metadata.getElementArea(), elementKey, cacheOperation.getValueSerializer().serialize(value), metadata.getExpirationInMillis()));
                 elementCacheKeys.add(elementKey);
             }
-            cache.putAllIfAbsent(elements, cacheOperation.getCacheEventCollector());
-            cache.put(key, cache.wrap(key, cacheOperation.getElementCacheKeySerializer().serialize(elementCacheKeys), metadata.getExpirationInMillis()), cacheOperation.getCacheEventCollector());
+            cache.putAllIfAbsent(metadata.getElementArea(), elements, cacheOperation.getCacheEventCollector());
+            cache.put(metadata.getArea(), key, cache.wrap(metadata.getArea(), key, cacheOperation.getElementCacheKeySerializer().serialize(elementCacheKeys), metadata.getExpirationInMillis()), cacheOperation.getCacheEventCollector());
         }
     }
 

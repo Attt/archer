@@ -11,6 +11,7 @@ import com.github.attt.archer.util.ShardingUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.util.Iterator;
 import java.util.List;
 import java.util.SortedMap;
 import java.util.TreeMap;
@@ -52,6 +53,11 @@ public class ShardingCacheConfigure implements ShardingConfigure {
             return shardingNodes.get(shardingNodes.firstKey());
         }
         return tail.get(tail.firstKey());
+    }
+
+    @Override
+    public Iterator<Cache> shards() {
+        return shardingNodes.values().iterator();
     }
 
     public void init() {

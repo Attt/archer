@@ -49,17 +49,17 @@ public class CacheContext {
         return old;
     }
 
-    public static void evictList(String key) {
+    public static void evictList(String area, String key) {
         AbstractProcessor processor = cacheManager.getProcessor(ListComponent.class);
-        evict(key, processor);
+        evict(area, key, processor);
     }
 
-    public static void evictObject(String key) {
+    public static void evictObject(String area, String key) {
         AbstractProcessor processor = cacheManager.getProcessor(ObjectComponent.class);
-        evict(key, processor);
+        evict(area, key, processor);
     }
 
-    private static void evict(String key, AbstractProcessor processor) {
-        processor.deleteWithKey(key);
+    private static void evict(String area, String key, AbstractProcessor processor) {
+        processor.deleteWithKey(area, key);
     }
 }

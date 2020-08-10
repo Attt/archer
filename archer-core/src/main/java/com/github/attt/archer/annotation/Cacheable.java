@@ -19,6 +19,13 @@ import java.lang.annotation.*;
 public @interface Cacheable {
 
     /**
+     * Cache area
+     * <p>
+     * Isolate caches
+     */
+    String area() default "";
+
+    /**
      * Alias for {@link #prefix()}
      */
     String value() default "";

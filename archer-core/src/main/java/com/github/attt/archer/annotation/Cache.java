@@ -23,6 +23,13 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
 public @interface Cache {
 
     /**
+     * Cache area
+     * <p>
+     * Isolate caches
+     */
+    String area() default "";
+
+    /**
      * Cache key
      * <p>
      * Support Spring Expression Language (SpEL)

@@ -33,7 +33,6 @@ public class CacheResolver {
 
     private static final Logger logger = LoggerFactory.getLogger(CacheResolver.class);
 
-
     public static AbstractCacheMetadata resolveMetadata(Method method, Annotation annotation) {
         Class<?> methodClass = method.getDeclaringClass();
         Cacheable cacheable = ReflectionUtil.getCacheAnnotation(methodClass, Cacheable.class);
@@ -44,22 +43,24 @@ public class CacheResolver {
         String keyPrefix = "";
         String valueSerializer = "";
         String keyGenerator = "";
+        String area = "";
         if (serviceCacheable != null) {
             keyPrefix = CommonUtils.isNotEmpty(serviceCacheable.prefix()) ? serviceCacheable.prefix() : serviceCacheable.value();
             valueSerializer = serviceCacheable.valueSerializer();
             keyGenerator = serviceCacheable.keyGenerator();
+            area = serviceCacheable.area();
         }
         if (annotation instanceof Cache || annotation instanceof CacheMulti) {
-            return resolveObjectCacheMetadata(method, annotation, keyPrefix, keyGenerator, valueSerializer, annotation);
+            return resolveObjectCacheMetadata(method, annotation, keyPrefix, keyGenerator, valueSerializer, annotation, area);
         } else if (annotation instanceof CacheList) {
             CacheList cacheList = (CacheList) annotation;
-            return resolveListableCacheMetadata(method, annotation, keyPrefix, keyGenerator, valueSerializer, cacheList);
+            return resolveListableCacheMetadata(method, annotation, keyPrefix, keyGenerator, valueSerializer, cacheList, area);
         } else if (annotation instanceof Evict) {
             Evict evict = (Evict) annotation;
-            return resolveCacheEvictMetadata(method, annotation, keyPrefix, keyGenerator, evict);
+            return resolveCacheEvictMetadata(method, annotation, keyPrefix, keyGenerator, evict, area);
         } else if (annotation instanceof EvictMulti) {
             EvictMulti evict = (EvictMulti) annotation;
-            return resolveCacheEvictMultiMetadata(method, annotation, keyPrefix, keyGenerator, evict);
+            return resolveCacheEvictMultiMetadata(method, annotation, keyPrefix, keyGenerator, evict, area);
         } else {
             throw new CacheBeanParsingException("Unsupported cache annotation : " + annotation);
         }
@@ -68,10 +69,10 @@ public class CacheResolver {
 
     private
     static ObjectCacheMetadata
-    resolveObjectCacheMetadata(Method method, Annotation cacheAnnotation, String keyPrefix, String keyGenerator, String valueSerializer, Annotation annotation) {
+    resolveObjectCacheMetadata(Method method, Annotation cacheAnnotation, String keyPrefix, String keyGenerator, String valueSerializer, Annotation annotation, String globalArea) {
         ObjectCacheMetadata metadata = new ObjectCacheMetadata();
 
-        String key, condition, aKeyGenerator, aValueSerializer;
+        String key, condition, aKeyGenerator, aValueSerializer, area;
         boolean overwrite, breakdownProtect;
         long expiration, breakdownProtectTimeout;
         TimeUnit expirationTimeUnit, breakdownProtectTimeoutTimeUnit;
@@ -87,6 +88,7 @@ public class CacheResolver {
             breakdownProtectTimeout = cache.breakdownProtectTimeout();
             expirationTimeUnit = cache.expirationTimeUnit();
             breakdownProtectTimeoutTimeUnit = cache.breakdownProtectTimeUnit();
+            area = cache.area();
         } else {
             CacheMulti cacheMulti = (CacheMulti) annotation;
             key = cacheMulti.elementKey();
@@ -99,6 +101,7 @@ public class CacheResolver {
             breakdownProtectTimeout = cacheMulti.breakdownProtectTimeout();
             expirationTimeUnit = cacheMulti.expirationTimeUnit();
             breakdownProtectTimeoutTimeUnit = cacheMulti.breakdownProtectTimeUnit();
+            area = cacheMulti.elementArea();
 
             metadata.setOrderBy(cacheMulti.orderBy());
             metadata.setMultiple(true);
@@ -110,7 +113,8 @@ public class CacheResolver {
                 keyPrefix,
                 key,
                 condition,
-                resolveValue(keyGenerator, aKeyGenerator)
+                resolveValue(keyGenerator, aKeyGenerator),
+                resolveValue(globalArea, area)
         );
 
         metadata.setInvokeAnyway(overwrite);
@@ -123,7 +127,7 @@ public class CacheResolver {
 
     private
     static ListCacheMetadata
-    resolveListableCacheMetadata(Method method, Annotation cacheAnnotation, String keyPrefix, String keyGenerator, String valueSerializer, CacheList cacheList) {
+    resolveListableCacheMetadata(Method method, Annotation cacheAnnotation, String keyPrefix, String keyGenerator, String valueSerializer, CacheList cacheList, String globalArea) {
         ListCacheMetadata metadata = new ListCacheMetadata();
         resolveCommonMetadata(
                 metadata,
@@ -132,7 +136,8 @@ public class CacheResolver {
                 keyPrefix,
                 cacheList.key(),
                 cacheList.condition(),
-                resolveValue(keyGenerator, cacheList.keyGenerator())
+                resolveValue(keyGenerator, cacheList.keyGenerator()),
+                resolveValue(globalArea, cacheList.area())
         );
         metadata.setElementKey(cacheList.elementKey());
         metadata.setElementKeyGenerator(cacheList.elementKeyGenerator());
@@ -141,12 +146,13 @@ public class CacheResolver {
         metadata.setExpirationInMillis(cacheList.expirationTimeUnit().toMillis(cacheList.expiration()));
         metadata.setBreakdownProtect(cacheList.breakdownProtect());
         metadata.setBreakdownProtectTimeoutInMillis(cacheList.breakdownProtectTimeUnit().toMillis(cacheList.breakdownProtectTimeout()));
+        metadata.setElementArea(cacheList.elementArea());
         return metadata;
     }
 
     private
     static EvictionMetadata
-    resolveCacheEvictMetadata(Method method, Annotation cacheAnnotation, String keyPrefix, String keyGenerator, Evict evict) {
+    resolveCacheEvictMetadata(Method method, Annotation cacheAnnotation, String keyPrefix, String keyGenerator, Evict evict, String globalArea) {
         EvictionMetadata metadata = new EvictionMetadata();
         resolveCommonMetadata(
                 metadata,
@@ -155,15 +161,17 @@ public class CacheResolver {
                 keyPrefix,
                 evict.key(),
                 evict.condition(),
-                resolveValue(keyGenerator, evict.keyGenerator())
+                resolveValue(keyGenerator, evict.keyGenerator()),
+                resolveValue(globalArea, evict.area())
         );
+        metadata.setAll(evict.all());
         metadata.setAfterInvocation(evict.afterInvocation());
         return metadata;
     }
 
     private
     static EvictionMetadata
-    resolveCacheEvictMultiMetadata(Method method, Annotation cacheAnnotation, String keyPrefix, String keyGenerator, EvictMulti evict) {
+    resolveCacheEvictMultiMetadata(Method method, Annotation cacheAnnotation, String keyPrefix, String keyGenerator, EvictMulti evict, String globalArea) {
         EvictionMetadata metadata = new EvictionMetadata();
         resolveCommonMetadata(
                 metadata,
@@ -172,7 +180,8 @@ public class CacheResolver {
                 keyPrefix,
                 evict.elementKey(),
                 evict.condition(),
-                resolveValue(keyGenerator, evict.keyGenerator())
+                resolveValue(keyGenerator, evict.keyGenerator()),
+                resolveValue(globalArea, evict.elementArea())
         );
         metadata.setMultiple(true);
         metadata.setAfterInvocation(evict.afterInvocation());
@@ -181,13 +190,14 @@ public class CacheResolver {
 
     private
     static void
-    resolveCommonMetadata(AbstractCacheMetadata metadata, Method method, Annotation cacheAnnotation, String keyPrefix, String key, String condition, String keyGenerator) {
+    resolveCommonMetadata(AbstractCacheMetadata metadata, Method method, Annotation cacheAnnotation, String keyPrefix, String key, String condition, String keyGenerator, String area) {
         metadata.setCacheAnnotation(cacheAnnotation);
         metadata.setKeyPrefix(keyPrefix);
         metadata.setKey(key);
         metadata.setCondition(condition);
         metadata.setKeyGenerator(keyGenerator);
         metadata.setMethodSignature(ReflectionUtil.getSignature(method));
+        metadata.setArea(area);
     }
 
     private static String resolveValue(String global, String instant) {

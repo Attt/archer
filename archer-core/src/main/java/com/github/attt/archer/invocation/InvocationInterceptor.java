@@ -241,12 +241,19 @@ public class InvocationInterceptor {
                                               Object target, Method method, Object[] args) throws Throwable {
 
         EvictionContext evictionContext = new EvictionContext();
-        EvictionMetadata metadata = evictionOperation.getMetadata();
-        List<Supplier<?>> operations = metadata.getAfterInvocation() ? evictionContext.postOperations : evictionContext.preOperations;
+        EvictionMetadata evictionMetadata = evictionOperation.getMetadata();
+        List<Supplier<?>> operations = evictionMetadata.getAfterInvocation() ? evictionContext.postOperations : evictionContext.preOperations;
         for (CacheOperation cacheOperation : cacheOperations) {
+            AbstractCacheMetadata cacheMetadata = cacheOperation.getMetadata();
+            if(CommonUtils.isNotEmpty(evictionMetadata.getArea()) &&
+                    !cacheMetadata.getArea().equals(evictionMetadata.getArea())){
+                // if evict area is not set to empty (means ignoring area)
+                // then only evict caches in specified area
+                continue;
+            }
             AbstractProcessor processor = management.getProcessor(cacheOperation);
             Supplier eviction = null;
-            if (metadata.getMultiple()) {
+            if (evictionMetadata.getMultiple()) {
                 List<InvocationContext> contexts = new ArrayList<>();
                 List<Object[]> newArgs = ReflectionUtil.flattenArgs(args);
                 for (Object[] newArg : newArgs) {
@@ -265,6 +272,10 @@ public class InvocationInterceptor {
                     return null;
                 };
             } else {
+                if(evictionMetadata.getAll()){
+                    // delete all without certain keys but with area
+
+                }
                 InvocationContext context = new InvocationContext();
                 context.setTarget(target);
                 context.setMethod(method);

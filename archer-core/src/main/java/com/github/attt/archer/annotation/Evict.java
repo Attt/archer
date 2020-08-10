@@ -22,6 +22,18 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
 public @interface Evict {
 
     /**
+     * Cache area
+     * <p>
+     * Isolate caches. <br>
+     * <p>
+     * If this value is set to empty,it means ignoring cache area
+     * and evicting the caches specified by {@link Evict#key()} or
+     * {@link Evict#keyGenerator()}, But if this value is not empty,
+     * then only the cache declaring the same area will be evicted.
+     */
+    String area() default "";
+
+    /**
      * Cache key
      * <p>
      * Support Spring Expression Language (SpEL)
@@ -46,4 +58,10 @@ public @interface Evict {
      * Support Spring Expression Language (SpEL)
      */
     String condition() default "";
+
+    /**
+     * To evict all entries in specified area
+     * if area is set to empty, evict all entries in all areas
+     */
+    boolean all() default false;
 }
