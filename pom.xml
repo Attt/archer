@@ -10,7 +10,7 @@
     <groupId>com.github.attt</groupId>
     <artifactId>archer</artifactId>
     <packaging>pom</packaging>
-    <version>1.0-rc1</version>
+    <version>1.0-rc2-SNAPSHOT</version>
     <modules>
         <module>archer-core</module>
         <module>archer-spring</module>
@@ -21,7 +21,7 @@
     </modules>
 
     <properties>
-        <archer.version>1.0-rc1</archer.version>
+        <archer.version>1.0-rc2-SNAPSHOT</archer.version>
         <spring.version>4.0.0.RELEASE</spring.version>
         <spring.boot.version>1.0.0.RELEASE</spring.boot.version>
         <spring.boot.auto.configure.version>1.2.0.RELEASE</spring.boot.auto.configure.version>
