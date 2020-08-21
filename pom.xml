@@ -22,9 +22,9 @@
 
     <properties>
         <archer.version>1.0-rc2-SNAPSHOT</archer.version>
-        <spring.version>4.0.0.RELEASE</spring.version>
-        <spring.boot.version>1.0.0.RELEASE</spring.boot.version>
-        <spring.boot.auto.configure.version>1.2.0.RELEASE</spring.boot.auto.configure.version>
+        <spring.version>4.3.17.RELEASE</spring.version>
+        <spring.boot.version>1.5.13.RELEASE</spring.boot.version>
+        <spring.boot.auto.configure.version>1.5.13.RELEASE</spring.boot.auto.configure.version>
     </properties>
 
     <licenses>

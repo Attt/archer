@@ -14,7 +14,7 @@
     <name>archer-example</name>
 
     <properties>
-        <spring.version>4.0.0.RELEASE</spring.version>
+        <spring.version>4.3.17.RELEASE</spring.version>
     </properties>
     <dependencies>
         <dependency>
