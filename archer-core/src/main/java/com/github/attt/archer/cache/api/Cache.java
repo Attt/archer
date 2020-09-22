@@ -6,6 +6,9 @@ import java.io.Serializable;
 import java.util.Collection;
 import java.util.Map;
 
+import static com.github.attt.archer.constants.Constants.DEFAULT_KEYS_LOCK_SUFFIX;
+import static com.github.attt.archer.constants.Constants.DEFAULT_KEYS_SUFFIX;
+
 /**
  * Cache
  *
@@ -122,8 +125,31 @@ public interface Cache {
     boolean removeAll(String area, CacheEventCollector collector);
 
     /**
+     * The key of set to store all cache keys in one certain area
+     * default is set to '{area}'.concat('~keys')
+     *
+     * @param area
+     * @return
+     */
+    default String areaKeysSetKey(String area){
+        return area + DEFAULT_KEYS_SUFFIX;
+    }
+
+    /**
+     * The area lock of the keys set store all cache keys in one certain area
+     * default is set to '{area}'.concat('~keys_lock')
+     *
+     * @param area
+     * @return
+     */
+    default String areaKeysSetKeyLock(String area){
+        return area + DEFAULT_KEYS_LOCK_SUFFIX;
+    }
+
+    /**
      * Wrap key,value,ttl to Entry object
      *
+     * @param area
      * @param key
      * @param value
      * @param ttl

@@ -26,10 +26,9 @@ public @interface Evict {
      * <p>
      * Isolate caches. <br>
      * <p>
-     * If this value is set to empty,it means ignoring cache area
-     * and evicting the caches specified by {@link Evict#key()} or
+     * If area is not set, evict the caches keys are specified by {@link Evict#key()} or
      * {@link Evict#keyGenerator()}, But if this value is not empty,
-     * then only the cache declaring the same area will be evicted.
+     * then only the cache declaring this certain area will be evicted.
      */
     String area() default "";
 

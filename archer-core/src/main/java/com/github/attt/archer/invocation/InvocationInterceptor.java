@@ -245,8 +245,8 @@ public class InvocationInterceptor {
         List<Supplier<?>> operations = evictionMetadata.getAfterInvocation() ? evictionContext.postOperations : evictionContext.preOperations;
         for (CacheOperation cacheOperation : cacheOperations) {
             AbstractCacheMetadata cacheMetadata = cacheOperation.getMetadata();
-            if(CommonUtils.isNotEmpty(evictionMetadata.getArea()) &&
-                    !cacheMetadata.getArea().equals(evictionMetadata.getArea())){
+            if (CommonUtils.isNotEmpty(evictionMetadata.getArea()) &&
+                    !cacheMetadata.getArea().equals(evictionMetadata.getArea())) {
                 // if evict area is not set to empty (means ignoring area)
                 // then only evict caches in specified area
                 continue;
@@ -264,15 +264,12 @@ public class InvocationInterceptor {
                     contexts.add(context);
                 }
                 eviction = () -> {
-                    try {
-                        logger.debug("Delete contexts: {}", contexts);
-                        processor.deleteAll(contexts, cacheOperation);
-                    } finally {
-                    }
+                    logger.debug("Delete contexts: {}", contexts);
+                    processor.deleteAll(contexts, cacheOperation);
                     return null;
                 };
             } else {
-                if(evictionMetadata.getAll()){
+                if (evictionMetadata.getAll()) {
                     // delete all without certain keys but with area
 
                 }
@@ -281,11 +278,8 @@ public class InvocationInterceptor {
                 context.setMethod(method);
                 context.setArgs(args);
                 eviction = () -> {
-                    try {
-                        logger.debug("Delete context: {}", context);
-                        processor.delete(context, cacheOperation);
-                    } finally {
-                    }
+                    logger.debug("Delete context: {}", context);
+                    processor.delete(context, cacheOperation);
                     return null;
                 };
             }
