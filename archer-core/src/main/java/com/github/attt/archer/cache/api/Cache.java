@@ -6,6 +6,9 @@ import java.io.Serializable;
 import java.util.Collection;
 import java.util.Map;
 
+import static com.github.attt.archer.constants.Constants.DEFAULT_KEYS_LOCK_SUFFIX;
+import static com.github.attt.archer.constants.Constants.DEFAULT_KEYS_SUFFIX;
+
 /**
  * Cache
  *
@@ -25,93 +28,134 @@ public interface Cache {
     /**
      * True if the specified key already cached
      *
+     * @param area
      * @param key
      * @param collector
      * @return
      */
-    boolean containsKey(String key, CacheEventCollector collector);
+    boolean containsKey(String area, String key, CacheEventCollector collector);
 
     /**
      * Get entry cached with the specified key, return null if cache miss
      *
+     * @param area
      * @param key
      * @param collector
      * @return
      */
-    Entry get(String key, CacheEventCollector collector);
+    Entry get(String area, String key, CacheEventCollector collector);
 
     /**
-     * Batch version for {@link #get(String, CacheEventCollector)}
+     * Batch version for {@link #get(String, String, CacheEventCollector)}
      *
+     * @param area
      * @param keys
      * @param collector
      * @return
      */
-    Map<String, Entry> getAll(Collection<String> keys, CacheEventCollector collector);
+    Map<String, Entry> getAll(String area, Collection<String> keys, CacheEventCollector collector);
 
     /**
      * Cache entry with the specified key, <br>
      * replace the old one if already exists
      *
+     * @param area
      * @param key
      * @param value
      * @param collector
      */
-    void put(String key, Entry value, CacheEventCollector collector);
+    void put(String area, String key, Entry value, CacheEventCollector collector);
 
     /**
-     * Batch version for {@link #put(String, Entry, CacheEventCollector)}
+     * Batch version for {@link #put(String, String, Entry, CacheEventCollector)}
      *
+     * @param area
      * @param map
      * @param collector
      */
-    void putAll(Map<String, Entry> map, CacheEventCollector collector);
+    void putAll(String area, Map<String, Entry> map, CacheEventCollector collector);
 
     /**
      * Cache entry with the specified key, <br>
      * keep the old one if already exists
      *
+     * @param area
      * @param key
      * @param value
      * @param collector
      */
-    void putIfAbsent(String key, Entry value, CacheEventCollector collector);
+    void putIfAbsent(String area, String key, Entry value, CacheEventCollector collector);
 
     /**
-     * Batch version for {@link #put(String, Entry, CacheEventCollector)}
+     * Batch version for {@link #put(String, String, Entry, CacheEventCollector)}
      *
+     * @param area
      * @param map
      * @param collector
      */
-    void putAllIfAbsent(Map<String, Entry> map, CacheEventCollector collector);
+    void putAllIfAbsent(String area, Map<String, Entry> map, CacheEventCollector collector);
 
     /**
      * Remove entry with the specified key from cache
      *
+     * @param area
      * @param key
      * @param collector
      * @return
      */
-    boolean remove(String key, CacheEventCollector collector);
+    boolean remove(String area, String key, CacheEventCollector collector);
 
     /**
-     * Batch version for {@link #remove(String, CacheEventCollector)}
+     * Batch version for {@link #remove(String, String, CacheEventCollector)}
      *
+     * @param area
      * @param keys
      * @param collector
      * @return
      */
-    boolean removeAll(Collection<String> keys, CacheEventCollector collector);
+    boolean removeAll(String area, Collection<String> keys, CacheEventCollector collector);
+
+    /**
+     * Remove all caches in area
+     *
+     * @param area
+     * @param collector
+     * @return
+     */
+    boolean removeAll(String area, CacheEventCollector collector);
+
+    /**
+     * The key of set to store all cache keys in one certain area
+     * default is set to '{area}'.concat('~keys')
+     *
+     * @param area
+     * @return
+     */
+    default String areaKeysSetKey(String area){
+        return area + DEFAULT_KEYS_SUFFIX;
+    }
+
+    /**
+     * The area lock of the keys set store all cache keys in one certain area
+     * default is set to '{area}'.concat('~keys_lock')
+     *
+     * @param area
+     * @return
+     */
+    default String areaKeysSetKeyLock(String area){
+        return area + DEFAULT_KEYS_LOCK_SUFFIX;
+    }
 
     /**
      * Wrap key,value,ttl to Entry object
      *
+     * @param area
      * @param key
      * @param value
      * @param ttl
      * @return
      */
-    default Entry wrap(String key, byte[] value, long ttl) {
+    default Entry wrap(String area, String key, byte[] value, long ttl) {
         return new DefaultEntry(key, value, ttl);
     }
 

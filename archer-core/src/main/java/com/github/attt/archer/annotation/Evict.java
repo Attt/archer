@@ -7,6 +7,7 @@ import java.lang.annotation.Repeatable;
 import java.lang.annotation.Retention;
 import java.lang.annotation.Target;
 
+import static com.github.attt.archer.constants.Constants.DEFAULT_AREA;
 import static java.lang.annotation.ElementType.METHOD;
 import static java.lang.annotation.RetentionPolicy.RUNTIME;
 
@@ -22,11 +23,20 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
 public @interface Evict {
 
     /**
+     * Cache area
+     * <p>
+     * Isolate caches. <br>
+     * <p>
+     * If area is not empty, only the cache stored in this certain area will be evicted.
+     */
+    String area() default DEFAULT_AREA;
+
+    /**
      * Cache key
      * <p>
      * Support Spring Expression Language (SpEL)
      */
-    String key();
+    String key() default "";
 
     /**
      * Custom key generator name
@@ -46,4 +56,10 @@ public @interface Evict {
      * Support Spring Expression Language (SpEL)
      */
     String condition() default "";
+
+    /**
+     * To evict all entries in specified area
+     * if area is set to empty, evict all entries in all areas
+     */
+    boolean all() default false;
 }

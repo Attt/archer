@@ -17,6 +17,8 @@ import redis.clients.jedis.Pipeline;
 import java.util.*;
 import java.util.function.Consumer;
 import java.util.function.Function;
+import java.util.stream.Collectors;
+
 
 /**
  * Redis cache operation
@@ -75,13 +77,12 @@ public final class RedisCache implements Cache {
     }
 
     @Override
-    public boolean containsKey(String key, CacheEventCollector collector) {
-        Boolean exists = autoClose(jedis -> {
+    public boolean containsKey(String area, String key, CacheEventCollector collector) {
+        return autoClose(jedis -> {
             Boolean hasKey = jedis.exists(key);
             collector.collect(new CacheAccessEvent());
             return hasKey != null && hasKey;
         });
-        return exists;
     }
 
     private Jedis jedis() {
@@ -89,8 +90,9 @@ public final class RedisCache implements Cache {
     }
 
     @Override
-    public Entry get(String key, CacheEventCollector collector) {
-        Entry entry = autoClose(jedis -> {
+    public Entry get(String area, String key, CacheEventCollector collector) {
+
+        return autoClose(jedis -> {
             byte[] value = jedis.get(keySerializer.serialize(key));
             collector.collect(new CacheAccessEvent());
             if (value == null) {
@@ -98,13 +100,11 @@ public final class RedisCache implements Cache {
             }
             return (Entry) valueSerializer.looseDeserialize(value);
         });
-
-        return entry;
     }
 
     @Override
-    public Map<String, Entry> getAll(Collection<String> keys, CacheEventCollector collector) {
-        Map<String, Entry> map = autoClose(jedis -> {
+    public Map<String, Entry> getAll(String area, Collection<String> keys, CacheEventCollector collector) {
+        return autoClose(jedis -> {
             Map<String, Entry> entryMap = new HashMap<>();
             List<byte[]> values = jedis.mget(keys.stream().map(k -> keySerializer.serialize(k)).toArray(byte[][]::new));
             collector.collect(new CacheAccessEvent());
@@ -119,47 +119,78 @@ public final class RedisCache implements Cache {
             }
             return entryMap;
         });
-        return map;
     }
 
     @Override
-    public void put(String key, Entry value, CacheEventCollector collector) {
-        execute(putOp(key, value));
+    public void put(String area, String key, Entry value, CacheEventCollector collector) {
+        execute(putOp(area, key, value));
         collector.collect(new CacheAccessEvent());
     }
 
     @Override
-    public void putAll(Map<String, Entry> map, CacheEventCollector collector) {
-        execute(putAllOp(map));
+    public void putAll(String area, Map<String, Entry> map, CacheEventCollector collector) {
+        execute(putAllOp(area, map));
         collector.collect(new CacheAccessEvent());
     }
 
     @Override
-    public void putIfAbsent(String key, Entry value, CacheEventCollector collector) {
-        execute(putIfAbsentOp(key, value));
+    public void putIfAbsent(String area, String key, Entry value, CacheEventCollector collector) {
+        execute(putIfAbsentOp(area, key, value));
         collector.collect(new CacheAccessEvent());
     }
 
     @Override
-    public void putAllIfAbsent(Map<String, Entry> map, CacheEventCollector collector) {
-        execute(putAllIfAbsentOp(map));
+    public void putAllIfAbsent(String area, Map<String, Entry> map, CacheEventCollector collector) {
+        execute(putAllIfAbsentOp(area, map));
         collector.collect(new CacheAccessEvent());
     }
 
     @Override
-    public boolean remove(String key, CacheEventCollector collector) {
+    public boolean remove(String area, String key, CacheEventCollector collector) {
+        Boolean succeed = autoClose(jedis -> {
+            Long delCnt = jedis.del(keySerializer.serialize(key));
+            /*
+                Remove cache key of ~keys set after real cache is removed
+                to prevent consistent issue
+             */
+            jedis.srem(keySerializer.serialize(areaKeysSetKey(area)), keySerializer.serialize(key));
+            return delCnt != 0;
+        });
         collector.collect(new CacheAccessEvent());
-        return autoClose(jedis -> jedis.del(keySerializer.serialize(key)) != 0);
+        return succeed;
     }
 
     @Override
-    public boolean removeAll(Collection<String> keys, CacheEventCollector collector) {
+    public boolean removeAll(String area, Collection<String> keys, CacheEventCollector collector) {
         List<byte[]> keysInBytes = new ArrayList<>();
         for (String key : keys) {
             collector.collect(new CacheAccessEvent());
             keysInBytes.add(keySerializer.serialize(key));
         }
-        return autoClose(jedis -> jedis.del(keysInBytes.toArray(new byte[0][])) != 0);
+        Boolean succeed = autoClose(jedis -> {
+            Long delCnt = jedis.del(keysInBytes.toArray(new byte[0][]));
+            /*
+                Remove cache key of ~keys set after real cache is removed
+                to prevent consistent issue
+             */
+            jedis.srem(keySerializer.serialize(areaKeysSetKey(area)), keysInBytes.toArray(new byte[0][]));
+            return delCnt != 0;
+        });
+        collector.collect(new CacheAccessEvent());
+        return succeed;
+    }
+
+    @Override
+    public boolean removeAll(String area, CacheEventCollector collector) {
+        autoClose(jedis -> {
+            // Use lua script to ensure that no other OP. will be fired when deleting area keys
+            Long r = (Long) jedis.eval(
+                    keySerializer.serialize("local size = redis.call('SCARD', KEYS[1]); if size > 0 then local keys = redis.call('SMEMBERS', KEYS[1]); for _, k in ipairs(keys) do redis.call('DEL', k); redis.call('SREM', KEYS[1], k); end return 1; end return 0;"),
+                    1,
+                    keySerializer.serialize(areaKeysSetKey(area)));
+            return r != 0;
+        });
+        return false;
     }
 
     private <R> R autoClose(Function<Jedis, R> function) {
@@ -178,8 +209,14 @@ public final class RedisCache implements Cache {
     }
 
     @SuppressWarnings("all")
-    private Consumer<Pipeline> putOp(String key, Entry value) {
+    private Consumer<Pipeline> putOp(String area, String key, Entry value) {
         return pipeline -> {
+            /*
+                Push to ~keys set first to help resolving consistant issue.
+                It'll cause deleting an extra absent cache when remove all caches in area
+                if unfortunately this step is succeed but setting cache is failed.
+             */
+            pipeline.sadd(keySerializer.serialize(areaKeysSetKey(area)), keySerializer.serialize(key));
             pipeline.set(keySerializer.serialize(key), (byte[]) valueSerializer.serialize(value));
             if (value.getTtl() != -1L) {
                 pipeline.pexpire(keySerializer.serialize(key), value.getTtl());
@@ -188,8 +225,15 @@ public final class RedisCache implements Cache {
     }
 
     @SuppressWarnings("all")
-    private Consumer<Pipeline> putAllOp(Map<String, Entry> stringMap) {
+    private Consumer<Pipeline> putAllOp(String area, Map<String, Entry> stringMap) {
         return pipeline -> {
+            /*
+                Push to ~keys set first to help resolving consistant issue.
+                It'll cause deleting an extra absent cache when remove all caches in area
+                if unfortunately this step is succeed but setting cache is failed.
+            */
+            byte[][] keyBytesArray = stringMap.entrySet().stream().map(kv -> keySerializer.serialize(kv.getKey())).collect(Collectors.toList()).toArray(new byte[0][]);
+            pipeline.sadd(keySerializer.serialize(areaKeysSetKey(area)), keyBytesArray);
             for (Map.Entry<String, Entry> kv : stringMap.entrySet()) {
                 pipeline.set(keySerializer.serialize(kv.getKey()), (byte[]) valueSerializer.serialize(kv.getValue()));
                 if (kv.getValue().getTtl() != -1L) {
@@ -200,8 +244,15 @@ public final class RedisCache implements Cache {
     }
 
     @SuppressWarnings("all")
-    private Consumer<Pipeline> putAllIfAbsentOp(Map<String, Entry> stringMap) {
+    private Consumer<Pipeline> putAllIfAbsentOp(String area, Map<String, Entry> stringMap) {
         return pipeline -> {
+            /*
+                Push to ~keys set first to help resolving consistant issue.
+                It'll cause deleting an extra absent cache when remove all caches in area
+                if unfortunately this step is succeed but setting cache is failed.
+            */
+            byte[][] keyBytesArray = stringMap.entrySet().stream().map(kv -> keySerializer.serialize(kv.getKey())).collect(Collectors.toList()).toArray(new byte[0][]);
+            pipeline.sadd(keySerializer.serialize(areaKeysSetKey(area)), keyBytesArray);
             for (Map.Entry<String, Entry> kv : stringMap.entrySet()) {
                 pipeline.setnx(keySerializer.serialize(kv.getKey()), (byte[]) valueSerializer.serialize(kv.getValue()));
                 if (kv.getValue().getTtl() != -1L) {
@@ -213,12 +264,19 @@ public final class RedisCache implements Cache {
 
 
     @SuppressWarnings("all")
-    private Consumer<Pipeline> putIfAbsentOp(String key, Entry value) {
+    private Consumer<Pipeline> putIfAbsentOp(String area, String key, Entry value) {
         return pipeline -> {
+            /*
+                Push to ~keys set first to help resolving consistant issue.
+                It'll cause deleting an extra absent cache when remove all caches in area
+                if unfortunately this step is succeed but setting cache is failed.
+             */
+            pipeline.sadd(keySerializer.serialize(areaKeysSetKey(area)), keySerializer.serialize(key));
             pipeline.setnx(keySerializer.serialize(key), (byte[]) valueSerializer.serialize(value));
             if (value.getTtl() != -1L) {
                 pipeline.pexpire(keySerializer.serialize(key), value.getTtl());
             }
         };
     }
+
 }

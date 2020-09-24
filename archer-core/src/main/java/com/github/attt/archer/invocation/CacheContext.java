@@ -7,6 +7,8 @@ import com.github.attt.archer.roots.ObjectComponent;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import static com.github.attt.archer.constants.Constants.DEFAULT_AREA;
+
 /**
  * Service cacheable context
  *
@@ -49,17 +51,27 @@ public class CacheContext {
         return old;
     }
 
-    public static void evictList(String key) {
+    public static void evictList(String key){
         AbstractProcessor processor = cacheManager.getProcessor(ListComponent.class);
-        evict(key, processor);
+        evict(DEFAULT_AREA, key, processor);
     }
 
     public static void evictObject(String key) {
         AbstractProcessor processor = cacheManager.getProcessor(ObjectComponent.class);
-        evict(key, processor);
+        evict(DEFAULT_AREA, key, processor);
     }
 
-    private static void evict(String key, AbstractProcessor processor) {
-        processor.deleteWithKey(key);
+    public static void evictList(String area, String key) {
+        AbstractProcessor processor = cacheManager.getProcessor(ListComponent.class);
+        evict(area, key, processor);
+    }
+
+    public static void evictObject(String area, String key) {
+        AbstractProcessor processor = cacheManager.getProcessor(ObjectComponent.class);
+        evict(area, key, processor);
+    }
+
+    private static void evict(String area, String key, AbstractProcessor processor) {
+        processor.deleteWithKey(area, key);
     }
 }

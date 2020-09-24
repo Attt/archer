@@ -27,6 +27,11 @@ public class Controller {
         return userService.getUsers(pageId, pageSize);
     }
 
+    @RequestMapping(value = "/getUsersWithSpecifiedArea", method = RequestMethod.GET)
+    List<User> getUsersWithSpecifiedArea(int pageId, int pageSize) {
+        return userService.getUsersWithSpecifiedArea(pageId, pageSize);
+    }
+
     @RequestMapping(value = "/getUsers", method = RequestMethod.GET)
     List<User> getUsers() {
         List<Long> userIds = new ArrayList<>();
@@ -91,4 +96,13 @@ public class Controller {
         userService.deleteUser(userId);
     }
 
+    @RequestMapping(value = "/deleteAllUser", method = RequestMethod.POST)
+    void deleteAllUser(){
+        userService.deleteAllUser();
+    }
+
+    @RequestMapping(value = "/deleteAllCustomAreaUser", method = RequestMethod.POST)
+    void deleteAllCustomAreaUser(){
+        userService.deleteAllCustomAreaUser();
+    }
 }

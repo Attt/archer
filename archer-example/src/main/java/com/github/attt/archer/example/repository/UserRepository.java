@@ -92,6 +92,11 @@ public class UserRepository {
         }
     }
 
+    public void deleteAllUser() {
+        USER_TABLE.clear();
+        USER_TABLE_NAME_KEY.clear();
+    }
+
     public void renameUser(long userId, String username) {
         lag();
         User user = USER_TABLE.get(userId);
