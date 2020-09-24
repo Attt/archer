@@ -24,7 +24,7 @@ import com.github.attt.archer.operation.ObjectCacheOperation;
 import com.github.attt.archer.stats.api.CacheEventCollector;
 import com.github.attt.archer.stats.api.listener.CacheStatsListener;
 import com.github.attt.archer.stats.collector.NamedCacheEventCollector;
-import com.github.attt.archer.util.CacheResolver;
+import com.github.attt.archer.util.CacheUtils;
 import com.github.attt.archer.util.ReflectionUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -137,7 +137,7 @@ public class Archer {
         }
         List<Annotation> cacheEvictAnnotations = ReflectionUtil.getRepeatableCacheAnnotations(declaredMethod);
         for (Annotation cacheEvictAnnotation : cacheEvictAnnotations) {
-            EvictionMetadata metadata = (EvictionMetadata) CacheResolver.resolveMetadata(declaredMethod, cacheEvictAnnotation);
+            EvictionMetadata metadata = (EvictionMetadata) CacheUtils.resolveMetadata(declaredMethod, cacheEvictAnnotation);
             EvictionOperation evictionOperation = new EvictionOperation();
             evictionOperation.setMetadata(metadata);
             CacheEventCollector cacheEventCollector = new NamedCacheEventCollector(metadata.getMethodSignature());
@@ -162,17 +162,17 @@ public class Archer {
         List<Annotation> annotations = ReflectionUtil.getCacheAnnotations(declaredMethod, Cache.class, CacheMulti.class);
         for (Annotation annotation : annotations) {
             if (annotation != null) {
-                ObjectCacheMetadata metadata = (ObjectCacheMetadata) CacheResolver.resolveMetadata(declaredMethod, annotation);
+                ObjectCacheMetadata metadata = (ObjectCacheMetadata) CacheUtils.resolveMetadata(declaredMethod, annotation);
                 ObjectCacheOperation cacheOperation = new ObjectCacheOperation();
                 cacheOperation.setMetadata(metadata);
 
                 if (metadata.isMultiple()) {
-                    cacheOperation.setMultipleLoader(CacheResolver.resolveMultiLoader(declaredMethod));
+                    cacheOperation.setMultipleLoader(CacheUtils.resolveMultiLoader(declaredMethod));
                 } else {
-                    cacheOperation.setLoader(CacheResolver.resolveSingleLoader(declaredMethod));
+                    cacheOperation.setLoader(CacheUtils.resolveSingleLoader(declaredMethod));
                 }
 
-                Type cacheEntityType = metadata.isMultiple() ? CacheResolver.parseCacheEntityType(declaredMethod) : declaredMethod.getGenericReturnType();
+                Type cacheEntityType = metadata.isMultiple() ? CacheUtils.parseCacheEntityType(declaredMethod) : declaredMethod.getGenericReturnType();
                 if (CacheManager.Config.valueSerialization == Serialization.HESSIAN || CacheManager.Config.valueSerialization == Serialization.JAVA) {
                     if (!Serializable.class.isAssignableFrom(ReflectionUtil.toClass(cacheEntityType))) {
                         throw new CacheBeanParsingException("To use Hessian or Java serialization, " + cacheEntityType.getTypeName() + " must implement java.io.Serializable");
@@ -217,11 +217,11 @@ public class Archer {
         List<Annotation> annotations = ReflectionUtil.getCacheAnnotations(declaredMethod, CacheList.class);
         for (Annotation annotation : annotations) {
             if (annotation != null) {
-                ListCacheMetadata metadata = (ListCacheMetadata) CacheResolver.resolveMetadata(declaredMethod, annotation);
+                ListCacheMetadata metadata = (ListCacheMetadata) CacheUtils.resolveMetadata(declaredMethod, annotation);
                 ListCacheOperation listCacheOperation = new ListCacheOperation();
                 listCacheOperation.setMetadata(metadata);
-                listCacheOperation.setLoader(CacheResolver.createListableCacheLoader());
-                Type cacheEntityType = CacheResolver.parseCacheEntityType(declaredMethod);
+                listCacheOperation.setLoader(CacheUtils.createListableCacheLoader());
+                Type cacheEntityType = CacheUtils.parseCacheEntityType(declaredMethod);
                 if (CacheManager.Config.valueSerialization == Serialization.HESSIAN || CacheManager.Config.valueSerialization == Serialization.JAVA) {
                     if (!Serializable.class.isAssignableFrom(ReflectionUtil.toClass(cacheEntityType))) {
                         throw new CacheBeanParsingException("To use Hessian or Java serialization, " + cacheEntityType.getTypeName() + " must implement java.io.Serializable");

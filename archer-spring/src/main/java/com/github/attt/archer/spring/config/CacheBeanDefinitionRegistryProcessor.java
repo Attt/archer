@@ -20,7 +20,7 @@ import com.github.attt.archer.operation.ObjectCacheOperation;
 import com.github.attt.archer.stats.api.CacheEvent;
 import com.github.attt.archer.stats.api.listener.CacheStatsListener;
 import com.github.attt.archer.stats.collector.NamedCacheEventCollector;
-import com.github.attt.archer.util.CacheResolver;
+import com.github.attt.archer.util.CacheUtils;
 import com.github.attt.archer.util.CommonUtils;
 import com.github.attt.archer.util.ReflectionUtil;
 import org.slf4j.Logger;
@@ -138,9 +138,9 @@ public class CacheBeanDefinitionRegistryProcessor implements BeanDefinitionRegis
 
         final Type returnType = method.getGenericReturnType();
 
-        final ObjectCacheMetadata metadata = (ObjectCacheMetadata) CacheResolver.resolveMetadata(method, annotation);
+        final ObjectCacheMetadata metadata = (ObjectCacheMetadata) CacheUtils.resolveMetadata(method, annotation);
 
-        Type cacheEntityType = metadata.isMultiple() ? CacheResolver.parseCacheEntityType(method) : returnType;
+        Type cacheEntityType = metadata.isMultiple() ? CacheUtils.parseCacheEntityType(method) : returnType;
 
         if (CacheManager.Config.valueSerialization == Serialization.HESSIAN || CacheManager.Config.valueSerialization == Serialization.JAVA) {
             if (!Serializable.class.isAssignableFrom(ReflectionUtil.toClass(cacheEntityType))) {
@@ -163,8 +163,8 @@ public class CacheBeanDefinitionRegistryProcessor implements BeanDefinitionRegis
         // register cache operation source bean definition
         AbstractBeanDefinition cacheOperationDefinition = BeanDefinitionBuilder.genericBeanDefinition(ObjectCacheOperation.class)
                 .addPropertyValue("metadata", metadata)
-                .addPropertyValue("loader", metadata.isMultiple() ? null : CacheResolver.resolveSingleLoader(method))
-                .addPropertyValue("multipleLoader", metadata.isMultiple() ? CacheResolver.resolveMultiLoader(method) : null)
+                .addPropertyValue("loader", metadata.isMultiple() ? null : CacheUtils.resolveSingleLoader(method))
+                .addPropertyValue("multipleLoader", metadata.isMultiple() ? CacheUtils.resolveMultiLoader(method) : null)
                 .addPropertyValue("valueSerializer", valueSerializer)
                 .addPropertyValue("cacheEventCollector", new NamedCacheEventCollector(metadata.getMethodSignature()))
                 .getBeanDefinition();
@@ -191,7 +191,7 @@ public class CacheBeanDefinitionRegistryProcessor implements BeanDefinitionRegis
 
         final String methodSignature = ReflectionUtil.getSignature(method, true, true);
 
-        final Type cacheEntityType = CacheResolver.parseCacheEntityType(method);
+        final Type cacheEntityType = CacheUtils.parseCacheEntityType(method);
 
         if (CacheManager.Config.valueSerialization == Serialization.HESSIAN || CacheManager.Config.valueSerialization == Serialization.JAVA) {
             if (!Serializable.class.isAssignableFrom(ReflectionUtil.toClass(cacheEntityType))) {
@@ -199,12 +199,12 @@ public class CacheBeanDefinitionRegistryProcessor implements BeanDefinitionRegis
             }
         }
 
-        final ListCacheMetadata metadata = (ListCacheMetadata) CacheResolver.resolveMetadata(method, annotation);
+        final ListCacheMetadata metadata = (ListCacheMetadata) CacheUtils.resolveMetadata(method, annotation);
 
         logger.debug("CacheEntityClass is : {}", cacheEntityType.getTypeName());
 
         // create loader proxy
-        SingleLoader<?> loader = CacheResolver.createListableCacheLoader();
+        SingleLoader<?> loader = CacheUtils.createListableCacheLoader();
 
         // operation source class
         BeanDefinitionBuilder cacheOperationDefinitionBuilder = BeanDefinitionBuilder.genericBeanDefinition(ListCacheOperation.class);
@@ -240,7 +240,7 @@ public class CacheBeanDefinitionRegistryProcessor implements BeanDefinitionRegis
             final BeanDefinitionRegistry registry) {
         final String methodSignature = ReflectionUtil.getSignature(method, true, true);
         for (Annotation annotation : annotationList) {
-            EvictionMetadata metadata = (EvictionMetadata) CacheResolver.resolveMetadata(method, annotation);
+            EvictionMetadata metadata = (EvictionMetadata) CacheUtils.resolveMetadata(method, annotation);
 
             // register cache OperationSource bean definition
             AbstractBeanDefinition cacheEvictionOperationSourceDefinition = BeanDefinitionBuilder.genericBeanDefinition(EvictionOperation.class)
