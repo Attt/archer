@@ -21,6 +21,7 @@ public class DefaultKeyGenerator implements KeyGenerator {
     @Override
     public String generateKey(AbstractCacheMetadata metadata, Object target, Method method, Object[] args, Object result, Object resultElement) {
 
+        String area = metadata.getArea();
         String prefix = metadata.getKeyPrefix();
         String key = metadata.getKey();
 
@@ -30,7 +31,8 @@ public class DefaultKeyGenerator implements KeyGenerator {
         Object value = SpringElUtil.parse(key).setMethodInvocationContext(target, method, args, result).addVar("result$each", resultElement).getValue();
         String cacheKey = String.valueOf(value);
 
-        return CommonUtils.isEmpty(prefix) ? cacheKey : prefix + DEFAULT_DELIMITER + cacheKey;
+        String prefixedCacheKey = CommonUtils.isEmpty(prefix) ? cacheKey : prefix + DEFAULT_DELIMITER + cacheKey;
+        return CommonUtils.isEmpty(area) ? prefixedCacheKey : area + DEFAULT_DELIMITER + prefixedCacheKey;
     }
 
 }

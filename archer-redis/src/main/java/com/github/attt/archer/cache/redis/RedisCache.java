@@ -185,7 +185,7 @@ public final class RedisCache implements Cache {
         autoClose(jedis -> {
             // Use lua script to ensure that no other OP. will be fired when deleting area keys
             Long r = (Long) jedis.eval(
-                    keySerializer.serialize("local size = redis.call('SCARD', KEYS[1]); if size > 0 then local keys = redis.call('SMEMBERS', KEYS[1]); for _, k in ipairs(keys) do redis.call('DEL', k); end redis.call('DEL', KEYS[1]); return 1; end return 0;"),
+                    keySerializer.serialize("local size = redis.call('SCARD', KEYS[1]); if size > 0 then local keys = redis.call('SMEMBERS', KEYS[1]); for _, k in ipairs(keys) do redis.call('DEL', k); redis.call('SREM', KEYS[1], k); end return 1; end return 0;"),
                     1,
                     keySerializer.serialize(areaKeysSetKey(area)));
             return r != 0;

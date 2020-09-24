@@ -28,6 +28,18 @@ public interface UserService {
     @CacheList(key = "'page:' + #pageId", elementKey = "#result$each.id", condition = "#pageId == 1")
     List<User> getUsers(int pageId, int pageSize);
 
+    /**
+     * 带条件的列表缓存, 指定area
+     * <p>
+     * <p>
+     * condition 用来限制缓存条件
+     *
+     * @param pageId
+     * @param pageSize
+     * @return
+     */
+    @CacheList(area = "custom", elementArea = "custom", key = "'page:' + #pageId", elementKey = "#result$each.id", condition = "#pageId == 1")
+    List<User> getUsersWithSpecifiedArea(int pageId, int pageSize);
 
     // 对象缓存
 
@@ -92,6 +104,18 @@ public interface UserService {
      */
     @EvictMulti(elementKey = "#userIds.size()")
     void deleteUsers(List<Long> userIds);
+
+    /**
+     * 淘汰整个缓存区域
+     */
+    @Evict(all = true)
+    void deleteAllUser();
+
+    /**
+     * 淘汰整个缓存区域, 指定area
+     */
+    @Evict(all = true, area = "custom")
+    void deleteAllCustomAreaUser();
 
     /**
      * 淘汰缓存

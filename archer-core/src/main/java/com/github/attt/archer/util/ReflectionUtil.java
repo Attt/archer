@@ -605,15 +605,15 @@ public class ReflectionUtil extends Reflections {
     }
 
     /**
-     * flatten args
+     * stretch arguments
      * <p>
      * if Object[] args is [list(1,2,3),string(a)]
-     * flattened result is [1,string(a)],[2,string(a)],[3,string(a)]
+     * stretched result is [1,string(a)],[2,string(a)],[3,string(a)]
      *
      * @param args
      * @return
      */
-    public static List<Object[]> flattenArgs(Object[] args) {
+    public static List<Object[]> stretchArgs(Object[] args) {
         List<Object[]> newArgs = new ArrayList<>();
         for (int i = 0; i < args.length; i++) {
             Object arg = args[i];
@@ -643,13 +643,13 @@ public class ReflectionUtil extends Reflections {
     }
 
     /**
-     * reversal operation of {@link #flattenArgs(Object[])}
+     * reversal operation of {@link #stretchArgs(Object[])}
      *
      * @param method
      * @param args
      * @return
      */
-    public static Object[] roughenArgs(Method method, List<Object[]> args) {
+    public static Object[] squeezeArgs(Method method, List<Object[]> args) {
         Object[] args1 = args.get(0);
         Object[] roughenedArgs = new Object[method.getParameterCount()];
         for (int i = 0; i < method.getGenericParameterTypes().length; i++) {

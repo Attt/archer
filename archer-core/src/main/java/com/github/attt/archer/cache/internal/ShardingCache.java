@@ -34,7 +34,6 @@ public class ShardingCache implements Cache {
 
     @Override
     public boolean containsKey(String area, String key, CacheEventCollector collector) {
-        key = prefixKey(area, key);
         CacheTimeElapsingEvent cacheTimeElapsingEvent = new CacheTimeElapsingEvent();
         CacheAccessEvent cacheAccessEvent = new CacheAccessEvent();
         boolean exist = shardingConfigure.sharding(key).containsKey(area, key, collector);
@@ -46,7 +45,6 @@ public class ShardingCache implements Cache {
 
     @Override
     public Entry get(String area, String key, CacheEventCollector collector) {
-        key = prefixKey(area, key);
         CacheTimeElapsingEvent cacheTimeElapsingEvent = new CacheTimeElapsingEvent();
         Entry entry = shardingConfigure.sharding(key).get(area, key, collector);
         cacheTimeElapsingEvent.done();
@@ -59,7 +57,6 @@ public class ShardingCache implements Cache {
         CacheTimeElapsingEvent cacheTimeElapsingEvent = new CacheTimeElapsingEvent();
         Map<Cache, List<String>> shardingKeys = new LinkedHashMap<>();
         for (String key : keys) {
-            key = prefixKey(area, key);
             Cache cache = shardingConfigure.sharding(key);
             shardingKeys.computeIfAbsent(cache, cacheKey -> new ArrayList<>()).add(key);
         }
@@ -82,7 +79,6 @@ public class ShardingCache implements Cache {
 
     @Override
     public void put(String area, String key, Entry value, CacheEventCollector collector) {
-        key = prefixKey(area, key);
         CacheTimeElapsingEvent cacheTimeElapsingEvent = new CacheTimeElapsingEvent();
         shardingConfigure.sharding(key).put(area, key, value, collector);
         cacheTimeElapsingEvent.done();
@@ -96,7 +92,6 @@ public class ShardingCache implements Cache {
 
     @Override
     public void putIfAbsent(String area, String key, Entry value, CacheEventCollector collector) {
-        key = prefixKey(area, key);
         CacheTimeElapsingEvent cacheTimeElapsingEvent = new CacheTimeElapsingEvent();
         shardingConfigure.sharding(key).putIfAbsent(area, key, value, collector);
         cacheTimeElapsingEvent.done();
@@ -112,7 +107,7 @@ public class ShardingCache implements Cache {
         CacheTimeElapsingEvent cacheTimeElapsingEvent = new CacheTimeElapsingEvent();
         Map<Cache, Map<String, Entry>> shardingKeys = new HashMap<>();
         for (Map.Entry<String, Entry> kv : map.entrySet()) {
-            String key = prefixKey(area, kv.getKey());
+            String key = kv.getKey();
             Entry value = kv.getValue();
             Cache cache = shardingConfigure.sharding(key);
             if (shardingKeys.containsKey(cache)) {
@@ -139,7 +134,6 @@ public class ShardingCache implements Cache {
 
     @Override
     public boolean remove(String area, String key, CacheEventCollector collector) {
-        key = prefixKey(area, key);
         CacheTimeElapsingEvent cacheTimeElapsingEvent = new CacheTimeElapsingEvent();
         CachePositivelyEvictEvent cachePositivelyEvictEvent = new CachePositivelyEvictEvent();
         boolean remove = shardingConfigure.sharding(key).remove(area, key, collector);
@@ -156,14 +150,12 @@ public class ShardingCache implements Cache {
         boolean remove = true;
         Map<Cache, List<String>> shardingKeys = new HashMap<>();
         for (String key : keys) {
-            key = prefixKey(area, key);
             Cache cache = shardingConfigure.sharding(key);
-            String finalKey = key;
             shardingKeys.compute(cache, (c, ks) -> {
                 if (ks == null) {
                     ks = new ArrayList<>();
                 }
-                ks.add(finalKey);
+                ks.add(key);
                 return ks;
             });
         }
@@ -182,19 +174,16 @@ public class ShardingCache implements Cache {
     @Override
     public boolean removeAll(String area, CacheEventCollector collector) {
         boolean re = true;
-        while (shardingConfigure.shards().hasNext()) {
-            re = re && shardingConfigure.shards().next().removeAll(area, collector);
+        Iterator<Cache> iterator = shardingConfigure.shards();
+        while (iterator.hasNext()) {
+            re = re & iterator.next().removeAll(area, collector);
         }
         return re;
     }
 
     @Override
     public Entry wrap(String area, String key, byte[] value, long ttl) {
-        key = prefixKey(area, key);
         return shardingConfigure.sharding(key).wrap(area, key, value, ttl);
     }
 
-    public String prefixKey(String area, String key) {
-        return CommonUtils.isNotEmpty(area) ? area + Constants.DEFAULT_DELIMITER + key : key;
-    }
 }

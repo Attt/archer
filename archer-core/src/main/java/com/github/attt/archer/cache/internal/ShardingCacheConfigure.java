@@ -11,10 +11,7 @@ import com.github.attt.archer.util.ShardingUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.Iterator;
-import java.util.List;
-import java.util.SortedMap;
-import java.util.TreeMap;
+import java.util.*;
 
 /**
  * @author atpexgo.wu
@@ -30,11 +27,13 @@ public class ShardingCacheConfigure implements ShardingConfigure {
 
     protected List<CacheShard> shardList;
 
-    private CacheInitializer cacheInitializer;
+    private final CacheInitializer cacheInitializer;
 
     private TreeMap<Long, Cache> shardingNodes;
 
-    private HashMapCache hashMapCache = new HashMapCache();
+    private final List<Cache> caches = new ArrayList<>();
+
+    private final HashMapCache hashMapCache = new HashMapCache();
 
     private boolean operationProvided = false;
 
@@ -57,7 +56,7 @@ public class ShardingCacheConfigure implements ShardingConfigure {
 
     @Override
     public Iterator<Cache> shards() {
-        return shardingNodes.values().iterator();
+        return caches.iterator();
     }
 
     public void init() {
@@ -79,6 +78,7 @@ public class ShardingCacheConfigure implements ShardingConfigure {
             CacheShard shard = shardList.get(i);
             try {
                 Cache cache = cacheInitializer.initial(shard);
+                caches.add(cache);
                 for (int j = 0; j < NODE_NUM; j++) {
                     shardingNodes.put(ShardingUtil.hash("SHARD-" + i + "NODE-" + j), cache);
                 }

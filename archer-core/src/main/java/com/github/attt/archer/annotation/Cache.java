@@ -8,6 +8,7 @@ import java.lang.annotation.Retention;
 import java.lang.annotation.Target;
 import java.util.concurrent.TimeUnit;
 
+import static com.github.attt.archer.constants.Constants.DEFAULT_AREA;
 import static java.lang.annotation.ElementType.METHOD;
 import static java.lang.annotation.RetentionPolicy.RUNTIME;
 
@@ -26,8 +27,10 @@ public @interface Cache {
      * Cache area
      * <p>
      * Isolate caches
+     * <p>
+     * Specify which area caches should be stored in
      */
-    String area() default "";
+    String area() default DEFAULT_AREA;
 
     /**
      * Cache key

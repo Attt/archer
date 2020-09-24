@@ -24,6 +24,7 @@ public class DefaultElementKeyGenerator implements KeyGenerator {
 
         ListCacheMetadata listableCacheMetadata = (ListCacheMetadata) metadata;
 
+        String area = listableCacheMetadata.getArea();
         String prefix = listableCacheMetadata.getKeyPrefix();
         String key = listableCacheMetadata.getElementKey();
 
@@ -35,7 +36,8 @@ public class DefaultElementKeyGenerator implements KeyGenerator {
                 .getValue();
         String cacheKey = String.valueOf(value);
 
-        return CommonUtils.isEmpty(prefix) ? cacheKey : prefix + DEFAULT_DELIMITER + cacheKey;
+        String prefixedCacheKey = CommonUtils.isEmpty(prefix) ? cacheKey : prefix + DEFAULT_DELIMITER + cacheKey;
+        return CommonUtils.isEmpty(area) ? prefixedCacheKey : area + DEFAULT_DELIMITER + prefixedCacheKey;
     }
 
 }

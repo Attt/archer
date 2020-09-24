@@ -7,6 +7,7 @@ import java.lang.annotation.Repeatable;
 import java.lang.annotation.Retention;
 import java.lang.annotation.Target;
 
+import static com.github.attt.archer.constants.Constants.DEFAULT_AREA;
 import static java.lang.annotation.ElementType.METHOD;
 import static java.lang.annotation.RetentionPolicy.RUNTIME;
 
@@ -24,9 +25,11 @@ public @interface EvictMulti {
     /**
      * Element cache area
      * <p>
-     * Specify which area this cached elements stored in
+     * Isolate caches. <br>
+     * <p>
+     * If area is not empty, only the cache stored in this certain area will be evicted.
      */
-    String elementArea() default "";
+    String elementArea() default DEFAULT_AREA;
 
     /**
      * Element cache key

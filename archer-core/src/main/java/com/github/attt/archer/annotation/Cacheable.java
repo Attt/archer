@@ -5,6 +5,8 @@ import com.github.attt.archer.components.api.ValueSerializer;
 
 import java.lang.annotation.*;
 
+import static com.github.attt.archer.constants.Constants.DEFAULT_AREA;
+
 /**
  * Global properties annotation
  * <p>
@@ -22,8 +24,10 @@ public @interface Cacheable {
      * Cache area
      * <p>
      * Isolate caches
+     * <p>
+     * Specify which area caches should be stored in
      */
-    String area() default "";
+    String area() default DEFAULT_AREA;
 
     /**
      * Alias for {@link #prefix()}

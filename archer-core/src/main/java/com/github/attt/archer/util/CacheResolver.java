@@ -250,7 +250,7 @@ public class CacheResolver {
             }
 
             // the roughened arguments here for example is parsed to [([1,2],"s")]
-            Object[] roughenedArgs = ReflectionUtil.roughenArgs(method, flattenedArgs);
+            Object[] roughenedArgs = ReflectionUtil.squeezeArgs(method, flattenedArgs);
             method.setAccessible(true);
             Object result = method.invoke(target, roughenedArgs);
 
