@@ -68,10 +68,10 @@ public enum CacheType {
 
     public static CacheType resolve(Annotation annotation) {
         CacheType cacheType = null;
-        if(annotation != null) {
+        if (annotation != null) {
             cacheType = MAPPING.get(annotation.annotationType());
         }
-        if(cacheType == null){
+        if (cacheType == null) {
             throw new CacheOperationException("No such cache type supported. " + (annotation == null ? "null" : annotation.annotationType().getName()));
         }
         return cacheType;

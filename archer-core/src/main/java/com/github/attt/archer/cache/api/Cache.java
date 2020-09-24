@@ -131,7 +131,7 @@ public interface Cache {
      * @param area
      * @return
      */
-    default String areaKeysSetKey(String area){
+    default String areaKeysSetKey(String area) {
         return area + DEFAULT_KEYS_SUFFIX;
     }
 
@@ -142,7 +142,7 @@ public interface Cache {
      * @param area
      * @return
      */
-    default String areaKeysSetKeyLock(String area){
+    default String areaKeysSetKeyLock(String area) {
         return area + DEFAULT_KEYS_LOCK_SUFFIX;
     }
 

@@ -119,7 +119,7 @@ public class HashMapCache implements Cache {
         return false;
     }
 
-    private void recordKeys(String area, Collection<String> keys){
+    private void recordKeys(String area, Collection<String> keys) {
         areaKeysMap.compute(area, (a, ks) -> {
             if (ks == null) {
                 ks = new ArrayList<>();
@@ -129,7 +129,7 @@ public class HashMapCache implements Cache {
         });
     }
 
-    private void recordKey(String area, String key){
+    private void recordKey(String area, String key) {
         areaKeysMap.compute(area, (a, ks) -> {
             if (ks == null) {
                 ks = new ArrayList<>();

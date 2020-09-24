@@ -107,7 +107,7 @@ public class ReflectionUtil extends Reflections {
         if (basePackage.length == 0) {
             basePackage = new String[]{"."};
         }
-        reflections = new ReflectionUtil (
+        reflections = new ReflectionUtil(
                 new ConfigurationBuilder()
                         .addClassLoader(ReflectionUtil.class.getClassLoader())
                         .forPackages(basePackage)

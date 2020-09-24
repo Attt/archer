@@ -51,7 +51,7 @@ public class CacheContext {
         return old;
     }
 
-    public static void evictList(String key){
+    public static void evictList(String key) {
         AbstractProcessor processor = cacheManager.getProcessor(ListComponent.class);
         evict(DEFAULT_AREA, key, processor);
     }

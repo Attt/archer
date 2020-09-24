@@ -97,12 +97,12 @@ public class Controller {
     }
 
     @RequestMapping(value = "/deleteAllUser", method = RequestMethod.POST)
-    void deleteAllUser(){
+    void deleteAllUser() {
         userService.deleteAllUser();
     }
 
     @RequestMapping(value = "/deleteAllCustomAreaUser", method = RequestMethod.POST)
-    void deleteAllCustomAreaUser(){
+    void deleteAllCustomAreaUser() {
         userService.deleteAllCustomAreaUser();
     }
 }

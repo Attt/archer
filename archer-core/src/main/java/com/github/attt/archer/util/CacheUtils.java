@@ -258,7 +258,7 @@ public class CacheUtils {
 
     /**
      * Used for {@link Map}'s key check
-     *
+     * <p>
      * Override {@link Object#equals(Object)} and {@link Object#hashCode()}
      * to make that the map key is the same represents every single argument
      * is the same.

@@ -16,7 +16,7 @@ import org.junit.jupiter.api.Test;
  */
 public class RedisTest {
 
-    private static final CacheEventCollector dummyCollector = new CacheEventCollector(){
+    private static final CacheEventCollector dummyCollector = new CacheEventCollector() {
         @Override
         public void register(CacheStatsListener<CacheEvent> listener) {
 
@@ -28,7 +28,7 @@ public class RedisTest {
         }
     };
 
-    private RedisCache initRedis(){
+    private RedisCache initRedis() {
         RedisCache redisCache = new RedisCache();
 
         redisCache.setKeySerializer(new InternalKeySerializer());
@@ -39,7 +39,7 @@ public class RedisTest {
     }
 
     @Test
-    public void testRemoveAll(){
+    public void testRemoveAll() {
         RedisCache redisCache = initRedis();
         redisCache.put("area1", "key1", new Cache.DefaultEntry("key1", "value1".getBytes(), -1L), dummyCollector);
         redisCache.put("area1", "key2", new Cache.DefaultEntry("key2", "value2".getBytes(), -1L), dummyCollector);
@@ -52,7 +52,7 @@ public class RedisTest {
     }
 
     @Test
-    public void testRemoveAllVeryEarliest(){
+    public void testRemoveAllVeryEarliest() {
         RedisCache redisCache = initRedis();
 
         redisCache.removeAll("area1", dummyCollector);

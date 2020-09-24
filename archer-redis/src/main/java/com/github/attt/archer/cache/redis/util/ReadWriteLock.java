@@ -6,15 +6,15 @@ package com.github.attt.archer.cache.redis.util;
  */
 public class ReadWriteLock {
 
-    public void tryAcquire(){
+    public void tryAcquire() {
 
     }
 
-    public void tryAcquireShared(){
+    public void tryAcquireShared() {
 
     }
-    
-    public void release(){
+
+    public void release() {
 
     }
 }

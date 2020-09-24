@@ -122,11 +122,12 @@ public class ListProcessor<V> extends AbstractProcessor<ListCacheOperation<V>, C
             Map<String, Cache.Entry> elements = new HashMap<>();
             for (V value : values) {
                 String elementKey = generateElementCacheKey(context, cacheOperation.getMetadata(), values, value);
-                elements.put(elementKey, cache.wrap(metadata.getElementArea(), elementKey, cacheOperation.getValueSerializer().serialize(value), metadata.getExpirationInMillis()));
+                elements.put(elementKey, cache.wrap(metadata.getElementArea(), elementKey, cacheOperation.getValueSerializer().serialize(value), metadata.getElementExpirationInMillis()));
                 elementCacheKeys.add(elementKey);
             }
             cache.putAllIfAbsent(metadata.getElementArea(), elements, cacheOperation.getCacheEventCollector());
             cache.put(metadata.getArea(), key, cache.wrap(metadata.getArea(), key, cacheOperation.getElementCacheKeySerializer().serialize(elementCacheKeys), metadata.getExpirationInMillis()), cacheOperation.getCacheEventCollector());
+
         }
     }
 

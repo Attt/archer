@@ -47,15 +47,15 @@
             <bean class="com.github.attt.archer.cache.redis.RedisShard">
                 <property name="database" value="10"/>
             </bean>
-<!--            <bean class="com.github.attt.archer.cache.redis.RedisShard">-->
-<!--                <property name="database" value="7"/>-->
-<!--            </bean>-->
-<!--            <bean class="com.github.attt.archer.cache.redis.RedisShard">-->
-<!--                <property name="database" value="8"/>-->
-<!--            </bean>-->
-<!--            <bean class="com.github.attt.archer.cache.redis.RedisShard">-->
-<!--                <property name="database" value="9"/>-->
-<!--            </bean>-->
+            <!--            <bean class="com.github.attt.archer.cache.redis.RedisShard">-->
+            <!--                <property name="database" value="7"/>-->
+            <!--            </bean>-->
+            <!--            <bean class="com.github.attt.archer.cache.redis.RedisShard">-->
+            <!--                <property name="database" value="8"/>-->
+            <!--            </bean>-->
+            <!--            <bean class="com.github.attt.archer.cache.redis.RedisShard">-->
+            <!--                <property name="database" value="9"/>-->
+            <!--            </bean>-->
         </archer:shard-list>
     </archer:enable>
 

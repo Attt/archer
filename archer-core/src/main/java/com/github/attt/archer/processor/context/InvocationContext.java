@@ -54,11 +54,11 @@ public class InvocationContext {
     }
 
 
-    public InvocationContext(){
+    public InvocationContext() {
 
     }
 
-    public InvocationContext(Object target, Method method, Object[] args, Supplier<?> methodInvoker){
+    public InvocationContext(Object target, Method method, Object[] args, Supplier<?> methodInvoker) {
         this.target = target;
         this.method = method;
         this.args = args;

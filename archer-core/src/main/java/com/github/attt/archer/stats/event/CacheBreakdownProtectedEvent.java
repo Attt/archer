@@ -2,9 +2,7 @@ package com.github.attt.archer.stats.event;
 
 import com.github.attt.archer.annotation.Cache;
 import com.github.attt.archer.metadata.CacheMetadata;
-import com.github.attt.archer.operation.CacheOperation;
 import com.github.attt.archer.processor.api.AbstractProcessor;
-import com.github.attt.archer.processor.context.InvocationContext;
 import com.github.attt.archer.stats.api.CacheEvent;
 import com.github.attt.archer.stats.api.CacheEventCollector;
 

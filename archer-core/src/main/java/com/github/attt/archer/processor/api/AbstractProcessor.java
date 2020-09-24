@@ -83,7 +83,7 @@ public abstract class AbstractProcessor<C extends CacheOperation<?, V>, V> imple
     }
 
     @Override
-    public void deleteAll(C cacheOperation){
+    public void deleteAll(C cacheOperation) {
         cache.removeAll(cacheOperation.getMetadata().getArea(), cacheOperation.getCacheEventCollector());
     }
 
