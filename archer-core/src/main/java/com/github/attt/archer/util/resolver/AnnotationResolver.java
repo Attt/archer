@@ -14,8 +14,28 @@ import java.lang.reflect.Method;
  */
 public interface AnnotationResolver<T extends Annotation, R extends AbstractCacheMetadata> {
 
+    /**
+     * Resolve annotation to metadata
+     *
+     * @param method             annotated method
+     * @param classCacheMetadata metadata of annotated class
+     * @param annotation         annotation
+     * @return cache metadata
+     */
     R resolve(Method method, ClassCacheMetadata classCacheMetadata, T annotation);
 
+    /**
+     * Resolve common part of metadata
+     *
+     * @param metadata
+     * @param method
+     * @param annotation
+     * @param keyPrefix
+     * @param key
+     * @param condition
+     * @param keyGenerator
+     * @param area
+     */
     default void resolveCommon(AbstractCacheMetadata metadata, Method method, T annotation, String keyPrefix, String key, String condition, String keyGenerator, String area) {
         metadata.setCacheAnnotation(annotation);
         metadata.setKeyPrefix(keyPrefix);
@@ -26,7 +46,12 @@ public interface AnnotationResolver<T extends Annotation, R extends AbstractCach
         metadata.setArea(area);
     }
 
-    default String chooseValue(String global, String instant) {
-        return CommonUtils.isEmpty(instant) ? global : instant;
+    /**
+     * @param defaultValue
+     * @param instant
+     * @return
+     */
+    default String chooseValue(String defaultValue, String instant) {
+        return CommonUtils.isEmpty(instant) ? defaultValue : instant;
     }
 }

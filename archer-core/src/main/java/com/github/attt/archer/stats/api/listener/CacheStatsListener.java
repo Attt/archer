@@ -14,7 +14,18 @@ import java.util.function.Predicate;
  */
 public interface CacheStatsListener<E extends CacheEvent> extends Comparable<CacheStatsListener<E>>, EventListener {
 
+    /**
+     * Resolve {@link CacheEvent}
+     *
+     * @param name
+     * @param event
+     */
     void onEvent(String name, E event);
 
+    /**
+     * Filter {@link CacheEvent}
+     *
+     * @return true if event is acceptable
+     */
     Predicate<E> filter();
 }

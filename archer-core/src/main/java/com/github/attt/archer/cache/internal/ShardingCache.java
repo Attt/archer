@@ -3,10 +3,9 @@ package com.github.attt.archer.cache.internal;
 
 import com.github.attt.archer.cache.api.Cache;
 import com.github.attt.archer.cache.api.ShardingConfigure;
-import com.github.attt.archer.constants.Constants;
 import com.github.attt.archer.stats.api.CacheEventCollector;
 import com.github.attt.archer.stats.event.CacheAccessEvent;
-import com.github.attt.archer.stats.event.CachePositivelyEvictEvent;
+import com.github.attt.archer.stats.event.CacheActivelyEvictEvent;
 import com.github.attt.archer.stats.event.CacheTimeElapsingEvent;
 import com.github.attt.archer.util.CommonUtils;
 
@@ -135,18 +134,18 @@ public class ShardingCache implements Cache {
     @Override
     public boolean remove(String area, String key, CacheEventCollector collector) {
         CacheTimeElapsingEvent cacheTimeElapsingEvent = new CacheTimeElapsingEvent();
-        CachePositivelyEvictEvent cachePositivelyEvictEvent = new CachePositivelyEvictEvent();
+        CacheActivelyEvictEvent cacheActivelyEvictEvent = new CacheActivelyEvictEvent();
         boolean remove = shardingConfigure.sharding(key).remove(area, key, collector);
         cacheTimeElapsingEvent.done();
         collector.collect(cacheTimeElapsingEvent);
-        collector.collect(cachePositivelyEvictEvent);
+        collector.collect(cacheActivelyEvictEvent);
         return remove;
     }
 
     @Override
     public boolean removeAll(String area, Collection<String> keys, CacheEventCollector collector) {
         CacheTimeElapsingEvent cacheTimeElapsingEvent = new CacheTimeElapsingEvent();
-        CachePositivelyEvictEvent cachePositivelyEvictEvent = new CachePositivelyEvictEvent();
+        CacheActivelyEvictEvent cacheActivelyEvictEvent = new CacheActivelyEvictEvent();
         boolean remove = true;
         Map<Cache, List<String>> shardingKeys = new HashMap<>();
         for (String key : keys) {
@@ -167,7 +166,7 @@ public class ShardingCache implements Cache {
         }
         cacheTimeElapsingEvent.done();
         collector.collect(cacheTimeElapsingEvent);
-        collector.collect(cachePositivelyEvictEvent);
+        collector.collect(cacheActivelyEvictEvent);
         return remove;
     }
 
