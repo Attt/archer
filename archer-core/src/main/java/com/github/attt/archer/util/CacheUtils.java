@@ -166,13 +166,18 @@ public class CacheUtils {
     /**
      * Create loader for {@link com.github.attt.archer.annotation.CacheMulti}
      * <p>
-     * Load all data whether all caches are missing or part of caches is missing
-     *
+     * Load all data whether all caches are missing or part of caches is missing:
      * <ul>
-     *     <li> Squeeze arguments of {@link InvocationContext} list
+     *     <li> Squeeze arguments defined in {@link InvocationContext} list
      *     <li> Invoke method defined in {@link InvocationContext} with squeezed arguments
-     *     <li> Map every {@link InvocationContext} to every result with {@link MapTo} (for keeping the order right)
+     *     <li> Map every {@link InvocationContext} to every result with {@link MapTo} (keep the order right)
      * </ul>
+     * <p>
+     * In multi result cache case, there will happen 'data noise' or data missing (see the comment of {@link MapTo} about 'noise data').
+     * To resolve 'data noise' or data missing problem, any cache of any element of {@link InvocationContext} list missing will
+     * cause the whole {@link InvocationContext} list data reloading but not just reload the absent ones.
+     * <p>
+     * Correctness is higher priority than efficiency
      *
      * @param method
      * @return
@@ -254,8 +259,9 @@ public class CacheUtils {
     /**
      * Used for {@link Map}'s key check
      *
-     *
-     *
+     * Override {@link Object#equals(Object)} and {@link Object#hashCode()}
+     * to make that the map key is the same represents every single argument
+     * is the same.
      */
     static class MappedArguments {
         private final Object[] objects;

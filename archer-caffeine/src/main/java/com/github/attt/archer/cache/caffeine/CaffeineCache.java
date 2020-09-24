@@ -7,7 +7,10 @@ import com.github.attt.archer.stats.event.CacheAccessEvent;
 import com.github.benmanes.caffeine.cache.Cache;
 import com.github.benmanes.caffeine.cache.Caffeine;
 
-import java.util.*;
+import java.util.Collection;
+import java.util.HashSet;
+import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.TimeUnit;
 
 /**
@@ -129,6 +132,17 @@ public final class CaffeineCache extends HashMapCache {
         collector.collect(new CacheAccessEvent());
         return false;
     }
+
+    @Override
+    public boolean removeAll(String area, CacheEventCollector collector) {
+        Set<String> keys = areaKeysCache.asMap().keySet();
+        for (String key : keys) {
+            cache.invalidate(key);
+            areaKeysCache.invalidate(key);
+        }
+        return false;
+    }
+
 
     @Override
     public void putAllIfAbsent(String area, Map<String, Entry> map, CacheEventCollector collector) {

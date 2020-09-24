@@ -55,53 +55,28 @@ public class HashMapCache implements Cache {
 
     @Override
     public void put(String area, String key, Entry value, CacheEventCollector collector) {
-        areaKeysMap.compute(area, (area1, keys) -> {
-            if (keys == null) {
-                keys = new ArrayList<>();
-            }
-            keys.add(key);
-            return keys;
-        });
-
+        recordKey(area, key);
         map.put(key, value);
         collector.collect(new CacheAccessEvent());
     }
 
     @Override
     public void putAll(String area, Map<String, Entry> map, CacheEventCollector collector) {
-        areaKeysMap.compute(area, (area1, keys) -> {
-            if (keys == null) {
-                keys = new ArrayList<>();
-            }
-            keys.addAll(map.keySet());
-            return keys;
-        });
+        recordKeys(area, map.keySet());
         this.map.putAll(map);
         collector.collect(new CacheAccessEvent());
     }
 
     @Override
     public void putIfAbsent(String area, String key, Entry value, CacheEventCollector collector) {
-        areaKeysMap.compute(area, (area1, keys) -> {
-            if (keys == null) {
-                keys = new ArrayList<>();
-            }
-            keys.add(key);
-            return keys;
-        });
+        recordKey(area, key);
         map.putIfAbsent(key, value);
         collector.collect(new CacheAccessEvent());
     }
 
     @Override
     public void putAllIfAbsent(String area, Map<String, Entry> map, CacheEventCollector collector) {
-        areaKeysMap.compute(area, (area1, keys) -> {
-            if (keys == null) {
-                keys = new ArrayList<>();
-            }
-            keys.addAll(map.keySet());
-            return keys;
-        });
+        recordKeys(area, map.keySet());
         this.map.putAll(map);
         collector.collect(new CacheAccessEvent());
     }
@@ -139,8 +114,28 @@ public class HashMapCache implements Cache {
         List<String> keys = areaKeysMap.get(area);
         for (String key : keys) {
             map.remove(key);
+            areaKeysMap.remove(key);
         }
         return false;
     }
 
+    private void recordKeys(String area, Collection<String> keys){
+        areaKeysMap.compute(area, (a, ks) -> {
+            if (ks == null) {
+                ks = new ArrayList<>();
+            }
+            ks.addAll(keys);
+            return ks;
+        });
+    }
+
+    private void recordKey(String area, String key){
+        areaKeysMap.compute(area, (a, ks) -> {
+            if (ks == null) {
+                ks = new ArrayList<>();
+            }
+            ks.add(key);
+            return ks;
+        });
+    }
 }
