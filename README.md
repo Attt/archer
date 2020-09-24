@@ -34,7 +34,7 @@ archer是一个完全基于方法注解的缓存框架，解除缓存与业务�
 
 可选：
 
-![spring.version](https://img.shields.io/badge/Spring-4.3.17.RELEASE%2B-green)
+![spring.version](https://img.shields.io/badge/Spring-4.3.18.RELEASE%2B-green)
 
 ![spring.boot.version](https://img.shields.io/badge/Spring.boot-1.5.13.RELEASE%2B-blue)
 
