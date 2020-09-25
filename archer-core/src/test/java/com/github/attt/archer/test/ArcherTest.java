@@ -2,6 +2,7 @@ package com.github.attt.archer.test;
 
 import com.github.attt.archer.Archer;
 import com.github.attt.archer.constants.Serialization;
+import com.github.attt.archer.expression.CacheExpressionUtilObject;
 import com.github.attt.archer.test.components.AllCacheEventListener;
 import com.github.attt.archer.test.model.User;
 import com.github.attt.archer.test.service.UserService;
@@ -62,6 +63,12 @@ public class ArcherTest {
         for (User user : usersByIdList) {
             System.out.println(user);
         }
+    }
+
+    @Test
+    public void testUtil(){
+        String key = CacheExpressionUtilObject.concatKey(1, "a", "b");
+        assert "1:a:b".equals(key);
     }
 
 }

@@ -1,5 +1,7 @@
 package com.github.attt.archer.expression;
 
+import static com.github.attt.archer.constants.Constants.DEFAULT_DELIMITER;
+
 /**
  * Cache util
  *
@@ -17,6 +19,10 @@ public class CacheExpressionUtilObject {
             stringBuilder.append(delimiter).append(values[i]);
         }
         return stringBuilder.toString();
+    }
+
+    public static String concatKey(Object... values) {
+        return concat(DEFAULT_DELIMITER, values);
     }
 
     public static String str(Object value) {
