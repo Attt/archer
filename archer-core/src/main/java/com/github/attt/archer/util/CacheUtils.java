@@ -77,13 +77,13 @@ public class CacheUtils {
                 CommonUtils.escapeNullable(serviceCacheable, () -> CommonUtils.isNotEmpty(serviceCacheable.prefix()) ? serviceCacheable.prefix() : serviceCacheable.value(), "")
         );
         classCacheMetadata.setValueSerializer(
-                CommonUtils.escapeNullable(serviceCacheable, serviceCacheable::valueSerializer, "")
+                CommonUtils.escapeNullable(serviceCacheable, () -> serviceCacheable.valueSerializer(), "")
         );
         classCacheMetadata.setKeyGenerator(
-                CommonUtils.escapeNullable(serviceCacheable, serviceCacheable::keyGenerator, "")
+                CommonUtils.escapeNullable(serviceCacheable, () -> serviceCacheable.keyGenerator(), "")
         );
         classCacheMetadata.setArea(
-                CommonUtils.escapeNullable(serviceCacheable, serviceCacheable::area, "")
+                CommonUtils.escapeNullable(serviceCacheable, () -> serviceCacheable.area(), "")
         );
 
 
