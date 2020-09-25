@@ -10,7 +10,7 @@
     <groupId>com.github.attt</groupId>
     <artifactId>archer</artifactId>
     <packaging>pom</packaging>
-    <version>1.0-rc2-SNAPSHOT</version>
+    <version>1.0-rc2</version>
     <modules>
         <module>archer-core</module>
         <module>archer-spring</module>
@@ -21,7 +21,7 @@
     </modules>
 
     <properties>
-        <archer.version>1.0-rc2-SNAPSHOT</archer.version>
+        <archer.version>1.0-rc2</archer.version>
         <spring.version>4.3.18.RELEASE</spring.version>
         <spring.boot.version>1.5.13.RELEASE</spring.boot.version>
         <spring.boot.auto.configure.version>1.5.13.RELEASE</spring.boot.auto.configure.version>
@@ -101,21 +101,20 @@
                     </plugin>
                 </plugins>
             </build>
-
-            <distributionManagement>
-                <snapshotRepository>
-                    <id>sonatype-nexus-snapshots</id>
-                    <url>
-                        https://oss.sonatype.org/content/repositories/snapshots
-                    </url>
-                </snapshotRepository>
-                <repository>
-                    <id>sonatype-nexus-staging</id>
-                    <url>
-                        https://oss.sonatype.org/service/local/staging/deploy/maven2
-                    </url>
-                </repository>
-            </distributionManagement>
         </profile>
     </profiles>
+    <distributionManagement>
+        <snapshotRepository>
+            <id>sonatype-nexus-snapshots</id>
+            <url>
+                https://oss.sonatype.org/content/repositories/snapshots
+            </url>
+        </snapshotRepository>
+        <repository>
+            <id>sonatype-nexus-staging</id>
+            <url>
+                https://oss.sonatype.org/service/local/staging/deploy/maven2
+            </url>
+        </repository>
+    </distributionManagement>
 </project>
