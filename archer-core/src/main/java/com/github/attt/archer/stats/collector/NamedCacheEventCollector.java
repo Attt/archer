@@ -15,9 +15,9 @@ import java.util.List;
  */
 public class NamedCacheEventCollector implements CacheEventCollector {
 
-    private String name;
+    private final String name;
 
-    private List<CacheStatsListener<CacheEvent>> listeners = new ArrayList<>();
+    private final List<CacheStatsListener<CacheEvent>> listeners = new ArrayList<>();
 
     public NamedCacheEventCollector(String name) {
         this.name = name;

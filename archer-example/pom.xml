@@ -5,7 +5,7 @@
     <parent>
         <artifactId>archer</artifactId>
         <groupId>com.github.attt</groupId>
-        <version>1.0-rc2-SNAPSHOT</version>
+        <version>1.0-rc2</version>
     </parent>
     <modelVersion>4.0.0</modelVersion>
 
@@ -14,7 +14,7 @@
     <name>archer-example</name>
 
     <properties>
-        <spring.version>4.3.17.RELEASE</spring.version>
+        <spring.version>4.3.18.RELEASE</spring.version>
     </properties>
     <dependencies>
         <dependency>
@@ -87,12 +87,12 @@
         <dependency>
             <groupId>com.fasterxml.jackson.core</groupId>
             <artifactId>jackson-core</artifactId>
-            <version>2.9.6</version>
+            <version>2.11.2</version>
         </dependency>
         <dependency>
             <groupId>com.fasterxml.jackson.core</groupId>
             <artifactId>jackson-databind</artifactId>
-            <version>2.9.10.5</version>
+            <version>2.11.2</version>
         </dependency>
 
         <dependency>

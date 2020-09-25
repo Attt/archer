@@ -42,8 +42,8 @@ public class ObjectProcessor<V> extends AbstractProcessor<ObjectCacheOperation<V
         if (metadata.getInvokeAnyway()) {
             return loadAndPut(context, cacheOperation);
         }
-        String key = generateCacheKey(context, cacheOperation.getMetadata());
-        Cache.Entry entry = cache.get(key, cacheOperation.getCacheEventCollector());
+        String key = generateCacheKey(context, metadata);
+        Cache.Entry entry = cache.get(metadata.getArea(), key, cacheOperation.getCacheEventCollector());
         if (entry == null) {
             // cache is missing
             cacheOperation.getCacheEventCollector().collect(new CacheMissEvent());
@@ -78,11 +78,11 @@ public class ObjectProcessor<V> extends AbstractProcessor<ObjectCacheOperation<V
         Map<InvocationContext, Cache.Entry> resultEntryMap = new LinkedHashMap<>(invocationContexts.size());
         List<String> keys = new ArrayList<>();
         for (InvocationContext context : invocationContexts) {
-            keys.add(generateCacheKey(context, cacheOperation.getMetadata()));
+            keys.add(generateCacheKey(context, metadata));
         }
 
         List<InvocationContext> contextList = new ArrayList<>(invocationContexts);
-        Map<String, Cache.Entry> entryMap = metadata.getInvokeAnyway() ? null : cache.getAll(keys, cacheOperation.getCacheEventCollector());
+        Map<String, Cache.Entry> entryMap = metadata.getInvokeAnyway() ? null : cache.getAll(metadata.getArea(), keys, cacheOperation.getCacheEventCollector());
 
         if (CommonUtils.isEmpty(entryMap)) {
             logger.debug("No entity in cache found..., load all");
@@ -183,9 +183,9 @@ public class ObjectProcessor<V> extends AbstractProcessor<ObjectCacheOperation<V
     public void put(InvocationContext context, V value, ObjectCacheOperation<V> cacheOperation) {
         ObjectCacheMetadata metadata = cacheOperation.getMetadata();
         logger.debug("Put invocation context {}", context);
-        String key = generateCacheKey(context, cacheOperation.getMetadata());
-        Cache.Entry entry = cache.wrap(key, cacheOperation.getValueSerializer().serialize(value), metadata.getExpirationInMillis());
-        cache.put(key, entry, cacheOperation.getCacheEventCollector());
+        String key = generateCacheKey(context, metadata);
+        Cache.Entry entry = cache.wrap(metadata.getArea(), key, cacheOperation.getValueSerializer().serialize(value), metadata.getExpirationInMillis());
+        cache.put(metadata.getArea(), key, entry, cacheOperation.getCacheEventCollector());
     }
 
     @Override
@@ -197,13 +197,13 @@ public class ObjectProcessor<V> extends AbstractProcessor<ObjectCacheOperation<V
                 // noise data
                 continue;
             }
-            String key = generateCacheKey(contextEntry.getKey(), cacheOperation.getMetadata());
+            String key = generateCacheKey(contextEntry.getKey(), metadata);
             byte[] serializedValue = cacheOperation.getValueSerializer().serialize(contextEntry.getValue());
-            Cache.Entry entry = cache.wrap(key, serializedValue, metadata.getExpirationInMillis());
+            Cache.Entry entry = cache.wrap(metadata.getArea(), key, serializedValue, metadata.getExpirationInMillis());
             kvMap.put(key, entry);
         }
         if (CommonUtils.isNotEmpty(kvMap)) {
-            cache.putAll(kvMap, cacheOperation.getCacheEventCollector());
+            cache.putAll(metadata.getArea(), kvMap, cacheOperation.getCacheEventCollector());
         }
     }
 

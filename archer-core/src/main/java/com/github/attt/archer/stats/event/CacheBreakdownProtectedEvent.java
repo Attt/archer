@@ -1,8 +1,10 @@
 package com.github.attt.archer.stats.event;
 
 import com.github.attt.archer.annotation.Cache;
+import com.github.attt.archer.metadata.CacheMetadata;
 import com.github.attt.archer.processor.api.AbstractProcessor;
 import com.github.attt.archer.stats.api.CacheEvent;
+import com.github.attt.archer.stats.api.CacheEventCollector;
 
 import java.util.function.Consumer;
 import java.util.function.Supplier;
@@ -14,8 +16,8 @@ import java.util.function.Supplier;
  * if breakdown protect option (such as {@link Cache#breakdownProtect()}) is set to true
  *
  * @author atpexgo.wu
- * @see AbstractProcessor.BreakdownProtectionLock
- * @see AbstractProcessor#doSynchronizedLoadAndPut(String, long, Supplier, Consumer, Supplier)
+ * @see CacheMetadata#breakdownProtect
+ * @see AbstractProcessor#doSynchronizedLoadAndPut(String, long, Supplier, Consumer, Supplier, CacheEventCollector)
  * @since 1.0
  */
 public class CacheBreakdownProtectedEvent implements CacheEvent {

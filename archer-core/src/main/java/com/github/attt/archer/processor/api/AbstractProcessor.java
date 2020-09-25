@@ -70,7 +70,7 @@ public abstract class AbstractProcessor<C extends CacheOperation<?, V>, V> imple
 
     @Override
     public void delete(InvocationContext context, C cacheOperation) {
-        cache.remove(generateCacheKey(context, cacheOperation.getMetadata()), cacheOperation.getCacheEventCollector());
+        cache.remove(cacheOperation.getMetadata().getArea(), generateCacheKey(context, cacheOperation.getMetadata()), cacheOperation.getCacheEventCollector());
     }
 
     @Override
@@ -79,17 +79,23 @@ public abstract class AbstractProcessor<C extends CacheOperation<?, V>, V> imple
         for (InvocationContext context : contextList) {
             keys.add(generateCacheKey(context, cacheOperation.getMetadata()));
         }
-        cache.removeAll(keys, cacheOperation.getCacheEventCollector());
+        cache.removeAll(cacheOperation.getMetadata().getArea(), keys, cacheOperation.getCacheEventCollector());
+    }
+
+    @Override
+    public void deleteAll(C cacheOperation) {
+        cache.removeAll(cacheOperation.getMetadata().getArea(), cacheOperation.getCacheEventCollector());
     }
 
     /**
      * It's tricky way for {@link CacheContext} to remove
      * cache by key in string literal
      *
+     * @param area
      * @param key
      */
-    public void deleteWithKey(String key) {
-        cache.remove(key, anonymousCacheEventCollector);
+    public void deleteWithKey(String area, String key) {
+        cache.remove(area, key, anonymousCacheEventCollector);
     }
 
     protected String generateCacheKey(InvocationContext context, CacheMetadata metadata) {

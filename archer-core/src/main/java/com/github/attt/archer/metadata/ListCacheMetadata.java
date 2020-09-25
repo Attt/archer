@@ -17,6 +17,10 @@ public class ListCacheMetadata extends CacheMetadata {
 
     private String elementKeyGenerator;
 
+    private String elementArea;
+
+    private Long elementExpirationInMillis;
+
     public String getElementValueSerializer() {
         return elementValueSerializer;
     }
@@ -41,12 +45,31 @@ public class ListCacheMetadata extends CacheMetadata {
         this.elementKeyGenerator = elementKeyGenerator;
     }
 
+
+    public String getElementArea() {
+        return elementArea;
+    }
+
+    public void setElementArea(String elementArea) {
+        this.elementArea = elementArea;
+    }
+
+    public Long getElementExpirationInMillis() {
+        return elementExpirationInMillis;
+    }
+
+    public void setElementExpirationInMillis(Long elementExpirationInMillis) {
+        this.elementExpirationInMillis = elementExpirationInMillis;
+    }
+
     @Override
     public String toString() {
         return "ListCacheMetadata{" +
                 "elementValueSerializer='" + elementValueSerializer + '\'' +
                 ", elementKey='" + elementKey + '\'' +
                 ", elementKeyGenerator='" + elementKeyGenerator + '\'' +
+                ", elementArea='" + elementArea + '\'' +
+                ", elementExpirationInMillis=" + elementExpirationInMillis +
                 ", expirationInMillis=" + expirationInMillis +
                 ", breakdownProtect=" + breakdownProtect +
                 ", breakdownProtectTimeoutInMillis=" + breakdownProtectTimeoutInMillis +
@@ -57,6 +80,7 @@ public class ListCacheMetadata extends CacheMetadata {
                 ", keyPrefix='" + keyPrefix + '\'' +
                 ", condition='" + condition + '\'' +
                 ", keyGenerator='" + keyGenerator + '\'' +
+                ", area='" + area + '\'' +
                 '}';
     }
 

@@ -7,6 +7,7 @@ import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.util.Collection;
 import java.util.Map;
+import java.util.function.Supplier;
 
 /**
  * @author atpexgo.wu
@@ -131,5 +132,12 @@ public class CommonUtils {
 
         BigInteger result = new BigInteger(value.substring(index), radix);
         return (negative ? result.negate() : result);
+    }
+
+    public static <T> T escapeNullable(Object nullable, Supplier<T> supplier, T fallback) {
+        if (nullable == null) {
+            return fallback;
+        }
+        return supplier.get();
     }
 }

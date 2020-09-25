@@ -31,6 +31,11 @@ public class UserServiceImpl implements UserService {
         return userRepository.queryUsers((pageId - 1), pageSize);
     }
 
+    @Override
+    public List<User> getUsersWithSpecifiedArea(int pageId, int pageSize) {
+        return userRepository.queryUsers((pageId - 1), pageSize);
+    }
+
 
     @Override
     public List<User> getUsers(List<Long> userIds) {
@@ -69,6 +74,18 @@ public class UserServiceImpl implements UserService {
         for (Long userId : userIds) {
             userRepository.deleteUser(userId);
         }
+    }
+
+    @Override
+    public void deleteAllUser() {
+        // disabled for retest
+//        userRepository.deleteAllUser();
+    }
+
+    @Override
+    public void deleteAllCustomAreaUser() {
+        // disabled for retest
+//        userRepository.deleteAllUser();
     }
 
     @Override

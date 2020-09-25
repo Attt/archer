@@ -24,6 +24,8 @@ public abstract class AbstractCacheMetadata implements Component {
 
     protected String keyGenerator;
 
+    protected String area;
+
     public Annotation getCacheAnnotation() {
         return cacheAnnotation;
     }
@@ -72,4 +74,11 @@ public abstract class AbstractCacheMetadata implements Component {
         this.keyGenerator = keyGenerator;
     }
 
+    public String getArea() {
+        return area;
+    }
+
+    public void setArea(String area) {
+        this.area = area;
+    }
 }

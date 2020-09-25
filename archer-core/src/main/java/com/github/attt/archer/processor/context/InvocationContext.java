@@ -53,6 +53,18 @@ public class InvocationContext {
         this.methodInvoker = methodInvoker;
     }
 
+
+    public InvocationContext() {
+
+    }
+
+    public InvocationContext(Object target, Method method, Object[] args, Supplier<?> methodInvoker) {
+        this.target = target;
+        this.method = method;
+        this.args = args;
+        this.methodInvoker = methodInvoker;
+    }
+
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
