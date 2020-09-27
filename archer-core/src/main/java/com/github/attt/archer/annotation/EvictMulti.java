@@ -29,14 +29,14 @@ public @interface EvictMulti {
      * <p>
      * If area is not empty, only the cache stored in this certain area will be evicted.
      */
-    String elementArea() default DEFAULT_AREA;
+    String[] elementArea() default DEFAULT_AREA;
 
     /**
      * Element cache key
      * <p>
      * Support Spring Expression Language (SpEL)
      */
-    String elementKey();
+    String[] elementKey();
 
     /**
      * Custom key generator name

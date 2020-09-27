@@ -105,4 +105,9 @@ public class Controller {
     void deleteAllCustomAreaUser() {
         userService.deleteAllCustomAreaUser();
     }
+
+    @RequestMapping(value = "/deleteAllAreaUser", method = RequestMethod.POST)
+    void deleteAllAreaUser() {
+        userService.deleteAllAreaUser();
+    }
 }

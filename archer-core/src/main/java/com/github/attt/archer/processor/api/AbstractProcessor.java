@@ -9,7 +9,9 @@ import com.github.attt.archer.components.internal.InternalElementKeyGenerator;
 import com.github.attt.archer.components.internal.InternalKeyGenerator;
 import com.github.attt.archer.invocation.CacheContext;
 import com.github.attt.archer.metadata.CacheMetadata;
-import com.github.attt.archer.operation.CacheOperation;
+import com.github.attt.archer.metadata.api.AbstractCacheMetadata;
+import com.github.attt.archer.operation.EvictionOperation;
+import com.github.attt.archer.operation.api.AbstractCacheOperation;
 import com.github.attt.archer.processor.context.InvocationContext;
 import com.github.attt.archer.stats.api.CacheEvent;
 import com.github.attt.archer.stats.api.CacheEventCollector;
@@ -36,7 +38,7 @@ import java.util.function.Supplier;
  * @author atpexgo.wu
  * @since 1.0
  */
-public abstract class AbstractProcessor<C extends CacheOperation<?, V>, V> implements Processor<InvocationContext, C, V> {
+public abstract class AbstractProcessor<C extends AbstractCacheOperation<?, V>, V> implements Processor<InvocationContext, C, EvictionOperation, V> {
 
     private final static Logger logger = LoggerFactory.getLogger(AbstractProcessor.class);
 
@@ -69,12 +71,12 @@ public abstract class AbstractProcessor<C extends CacheOperation<?, V>, V> imple
     }
 
     @Override
-    public void delete(InvocationContext context, C cacheOperation) {
+    public void delete(InvocationContext context, EvictionOperation cacheOperation) {
         cache.remove(cacheOperation.getMetadata().getArea(), generateCacheKey(context, cacheOperation.getMetadata()), cacheOperation.getCacheEventCollector());
     }
 
     @Override
-    public void deleteAll(List<InvocationContext> contextList, C cacheOperation) {
+    public void deleteAll(List<InvocationContext> contextList, EvictionOperation cacheOperation) {
         List<String> keys = new ArrayList<>();
         for (InvocationContext context : contextList) {
             keys.add(generateCacheKey(context, cacheOperation.getMetadata()));
@@ -83,7 +85,7 @@ public abstract class AbstractProcessor<C extends CacheOperation<?, V>, V> imple
     }
 
     @Override
-    public void deleteAll(C cacheOperation) {
+    public void deleteAll(EvictionOperation cacheOperation) {
         cache.removeAll(cacheOperation.getMetadata().getArea(), cacheOperation.getCacheEventCollector());
     }
 
@@ -98,19 +100,19 @@ public abstract class AbstractProcessor<C extends CacheOperation<?, V>, V> imple
         cache.remove(area, key, anonymousCacheEventCollector);
     }
 
-    protected String generateCacheKey(InvocationContext context, CacheMetadata metadata) {
+    protected String generateCacheKey(InvocationContext context, AbstractCacheMetadata metadata) {
         return keyGenerator.generateKey(metadata, context.getTarget(), context.getMethod(), context.getArgs(), null, null);
     }
 
-    protected String generateCacheKey(InvocationContext context, CacheMetadata metadata, Object result) {
+    protected String generateCacheKey(InvocationContext context, AbstractCacheMetadata metadata, Object result) {
         return keyGenerator.generateKey(metadata, context.getTarget(), context.getMethod(), context.getArgs(), result, null);
     }
 
-    protected String generateCacheKey(InvocationContext context, CacheMetadata metadata, Object result, Object resultElement) {
+    protected String generateCacheKey(InvocationContext context, AbstractCacheMetadata metadata, Object result, Object resultElement) {
         return keyGenerator.generateKey(metadata, context.getTarget(), context.getMethod(), context.getArgs(), result, resultElement);
     }
 
-    protected String generateElementCacheKey(InvocationContext context, CacheMetadata metadata, Object result, Object resultElement) {
+    protected String generateElementCacheKey(InvocationContext context, AbstractCacheMetadata metadata, Object result, Object resultElement) {
         return elementKeyGenerator.generateKey(metadata, context.getTarget(), context.getMethod(), context.getArgs(), result, resultElement);
     }
 

@@ -18,6 +18,7 @@ import com.github.attt.archer.invocation.InvocationInterceptor;
 import com.github.attt.archer.metadata.EvictionMetadata;
 import com.github.attt.archer.metadata.ListCacheMetadata;
 import com.github.attt.archer.metadata.ObjectCacheMetadata;
+import com.github.attt.archer.metadata.api.AbstractCacheMetadata;
 import com.github.attt.archer.operation.EvictionOperation;
 import com.github.attt.archer.operation.ListCacheOperation;
 import com.github.attt.archer.operation.ObjectCacheOperation;
@@ -137,20 +138,22 @@ public class Archer {
         }
         List<Annotation> cacheEvictAnnotations = ReflectionUtil.getRepeatableCacheAnnotations(declaredMethod);
         for (Annotation cacheEvictAnnotation : cacheEvictAnnotations) {
-            EvictionMetadata metadata = (EvictionMetadata) CacheUtils.resolveMetadata(declaredMethod, cacheEvictAnnotation);
-            EvictionOperation evictionOperation = new EvictionOperation();
-            evictionOperation.setMetadata(metadata);
-            CacheEventCollector cacheEventCollector = new NamedCacheEventCollector(metadata.getMethodSignature());
-            if (CacheManager.Config.metricsEnabled) {
-                for (CacheStatsListener statsListener : this.statsListeners) {
-                    cacheEventCollector.register(statsListener);
+            List<AbstractCacheMetadata> metadataList = CacheUtils.resolveMetadata(declaredMethod, cacheEvictAnnotation);
+            for (AbstractCacheMetadata metadata : metadataList) {
+                EvictionOperation evictionOperation = new EvictionOperation();
+                evictionOperation.setMetadata((EvictionMetadata) metadata);
+                CacheEventCollector cacheEventCollector = new NamedCacheEventCollector(metadata.getMethodSignature());
+                if (CacheManager.Config.metricsEnabled) {
+                    for (CacheStatsListener statsListener : this.statsListeners) {
+                        cacheEventCollector.register(statsListener);
+                    }
                 }
+                evictionOperation.setCacheEventCollector(cacheEventCollector);
+                evictionOperation.initialized();
+                String name = "eviction" + UUID.randomUUID().toString();
+                cacheManager.getEvictionOperationMap().put(name, evictionOperation);
+                cacheManager.getMethodSignatureToOperationSourceName().computeIfAbsent(signature, s -> new ArrayList<>()).add(name);
             }
-            evictionOperation.setCacheEventCollector(cacheEventCollector);
-            evictionOperation.initialized();
-            String name = "eviction" + UUID.randomUUID().toString();
-            cacheManager.getEvictionOperationMap().put(name, evictionOperation);
-            cacheManager.getMethodSignatureToOperationSourceName().computeIfAbsent(signature, s -> new ArrayList<>()).add(name);
         }
     }
 
@@ -162,50 +165,53 @@ public class Archer {
         List<Annotation> annotations = ReflectionUtil.getCacheAnnotations(declaredMethod, Cache.class, CacheMulti.class);
         for (Annotation annotation : annotations) {
             if (annotation != null) {
-                ObjectCacheMetadata metadata = (ObjectCacheMetadata) CacheUtils.resolveMetadata(declaredMethod, annotation);
-                ObjectCacheOperation cacheOperation = new ObjectCacheOperation();
-                cacheOperation.setMetadata(metadata);
+                List<AbstractCacheMetadata> metadataList = CacheUtils.resolveMetadata(declaredMethod, annotation);
+                for (AbstractCacheMetadata abstractMetadata : metadataList) {
+                    ObjectCacheMetadata metadata = (ObjectCacheMetadata) abstractMetadata;
+                    ObjectCacheOperation cacheOperation = new ObjectCacheOperation();
+                    cacheOperation.setMetadata(metadata);
 
-                if (metadata.isMultiple()) {
-                    cacheOperation.setMultipleLoader(CacheUtils.resolveMultiLoader(declaredMethod));
-                } else {
-                    cacheOperation.setLoader(CacheUtils.resolveSingleLoader(declaredMethod));
-                }
-
-                Type cacheEntityType = metadata.isMultiple() ? CacheUtils.parseCacheEntityType(declaredMethod) : declaredMethod.getGenericReturnType();
-                if (CacheManager.Config.valueSerialization == Serialization.HESSIAN || CacheManager.Config.valueSerialization == Serialization.JAVA) {
-                    if (!Serializable.class.isAssignableFrom(ReflectionUtil.toClass(cacheEntityType))) {
-                        throw new CacheBeanParsingException("To use Hessian or Java serialization, " + cacheEntityType.getTypeName() + " must implement java.io.Serializable");
+                    if (metadata.isMultiple()) {
+                        cacheOperation.setMultipleLoader(CacheUtils.resolveMultiLoader(declaredMethod));
+                    } else {
+                        cacheOperation.setLoader(CacheUtils.resolveSingleLoader(declaredMethod));
                     }
-                }
 
-                ValueSerializer userValueSerializer = StringUtils.isEmpty(metadata.getValueSerializer()) ? null : valueSerializerMap.getOrDefault(metadata.getValueSerializer(), null);
-                if (userValueSerializer != null) {
-                    cacheOperation.setValueSerializer(userValueSerializer);
-                } else {
-                    internalValueSerializers.computeIfAbsent(cacheEntityType.getTypeName(), new Function<String, InternalObjectValueSerializer>() {
-                        @Override
-                        public InternalObjectValueSerializer apply(String s) {
-                            return new InternalObjectValueSerializer(cacheEntityType);
+                    Type cacheEntityType = metadata.isMultiple() ? CacheUtils.parseCacheEntityType(declaredMethod) : declaredMethod.getGenericReturnType();
+                    if (CacheManager.Config.valueSerialization == Serialization.HESSIAN || CacheManager.Config.valueSerialization == Serialization.JAVA) {
+                        if (!Serializable.class.isAssignableFrom(ReflectionUtil.toClass(cacheEntityType))) {
+                            throw new CacheBeanParsingException("To use Hessian or Java serialization, " + cacheEntityType.getTypeName() + " must implement java.io.Serializable");
                         }
-                    });
-                    cacheOperation.setValueSerializer(
-                            internalValueSerializers.get(cacheEntityType.getTypeName())
-                    );
-                }
-
-                CacheEventCollector cacheEventCollector = new NamedCacheEventCollector(metadata.getMethodSignature());
-                if (CacheManager.Config.metricsEnabled) {
-                    for (CacheStatsListener statsListener : this.statsListeners) {
-                        cacheEventCollector.register(statsListener);
                     }
-                }
-                cacheOperation.setCacheEventCollector(cacheEventCollector);
 
-                cacheOperation.initialized();
-                String name = "cache" + UUID.randomUUID().toString();
-                cacheManager.getCacheOperationMap().put(name, cacheOperation);
-                cacheManager.getMethodSignatureToOperationSourceName().computeIfAbsent(signature, s -> new ArrayList<>()).add(name);
+                    ValueSerializer userValueSerializer = StringUtils.isEmpty(metadata.getValueSerializer()) ? null : valueSerializerMap.getOrDefault(metadata.getValueSerializer(), null);
+                    if (userValueSerializer != null) {
+                        cacheOperation.setValueSerializer(userValueSerializer);
+                    } else {
+                        internalValueSerializers.computeIfAbsent(cacheEntityType.getTypeName(), new Function<String, InternalObjectValueSerializer>() {
+                            @Override
+                            public InternalObjectValueSerializer apply(String s) {
+                                return new InternalObjectValueSerializer(cacheEntityType);
+                            }
+                        });
+                        cacheOperation.setValueSerializer(
+                                internalValueSerializers.get(cacheEntityType.getTypeName())
+                        );
+                    }
+
+                    CacheEventCollector cacheEventCollector = new NamedCacheEventCollector(metadata.getMethodSignature());
+                    if (CacheManager.Config.metricsEnabled) {
+                        for (CacheStatsListener statsListener : this.statsListeners) {
+                            cacheEventCollector.register(statsListener);
+                        }
+                    }
+                    cacheOperation.setCacheEventCollector(cacheEventCollector);
+
+                    cacheOperation.initialized();
+                    String name = "cache" + UUID.randomUUID().toString();
+                    cacheManager.getCacheOperationMap().put(name, cacheOperation);
+                    cacheManager.getMethodSignatureToOperationSourceName().computeIfAbsent(signature, s -> new ArrayList<>()).add(name);
+                }
             }
         }
     }
@@ -217,44 +223,47 @@ public class Archer {
         List<Annotation> annotations = ReflectionUtil.getCacheAnnotations(declaredMethod, CacheList.class);
         for (Annotation annotation : annotations) {
             if (annotation != null) {
-                ListCacheMetadata metadata = (ListCacheMetadata) CacheUtils.resolveMetadata(declaredMethod, annotation);
-                ListCacheOperation listCacheOperation = new ListCacheOperation();
-                listCacheOperation.setMetadata(metadata);
-                listCacheOperation.setLoader(CacheUtils.createListableCacheLoader());
-                Type cacheEntityType = CacheUtils.parseCacheEntityType(declaredMethod);
-                if (CacheManager.Config.valueSerialization == Serialization.HESSIAN || CacheManager.Config.valueSerialization == Serialization.JAVA) {
-                    if (!Serializable.class.isAssignableFrom(ReflectionUtil.toClass(cacheEntityType))) {
-                        throw new CacheBeanParsingException("To use Hessian or Java serialization, " + cacheEntityType.getTypeName() + " must implement java.io.Serializable");
-                    }
-                }
-
-                ValueSerializer userValueSerializer = StringUtils.isEmpty(metadata.getElementValueSerializer()) ? null : valueSerializerMap.getOrDefault(metadata.getElementValueSerializer(), null);
-                if (userValueSerializer != null) {
-                    listCacheOperation.setValueSerializer(userValueSerializer);
-                } else {
-                    internalValueSerializers.computeIfAbsent(cacheEntityType.getTypeName(), new Function<String, InternalObjectValueSerializer>() {
-                        @Override
-                        public InternalObjectValueSerializer apply(String s) {
-                            return new InternalObjectValueSerializer(cacheEntityType);
+                List<AbstractCacheMetadata> metadataList = CacheUtils.resolveMetadata(declaredMethod, annotation);
+                for (AbstractCacheMetadata abstractMetadata : metadataList) {
+                    ListCacheMetadata metadata = (ListCacheMetadata) abstractMetadata;
+                    ListCacheOperation listCacheOperation = new ListCacheOperation();
+                    listCacheOperation.setMetadata(metadata);
+                    listCacheOperation.setLoader(CacheUtils.createListableCacheLoader());
+                    Type cacheEntityType = CacheUtils.parseCacheEntityType(declaredMethod);
+                    if (CacheManager.Config.valueSerialization == Serialization.HESSIAN || CacheManager.Config.valueSerialization == Serialization.JAVA) {
+                        if (!Serializable.class.isAssignableFrom(ReflectionUtil.toClass(cacheEntityType))) {
+                            throw new CacheBeanParsingException("To use Hessian or Java serialization, " + cacheEntityType.getTypeName() + " must implement java.io.Serializable");
                         }
-                    });
-                    listCacheOperation.setValueSerializer(
-                            internalValueSerializers.get(cacheEntityType.getTypeName())
-                    );
-                }
-
-                CacheEventCollector cacheEventCollector = new NamedCacheEventCollector(metadata.getMethodSignature());
-                if (CacheManager.Config.metricsEnabled) {
-                    for (CacheStatsListener statsListener : this.statsListeners) {
-                        cacheEventCollector.register(statsListener);
                     }
-                }
-                listCacheOperation.setCacheEventCollector(cacheEventCollector);
 
-                listCacheOperation.initialized();
-                String name = "listCache" + UUID.randomUUID().toString();
-                cacheManager.getCacheOperationMap().put(name, listCacheOperation);
-                cacheManager.getMethodSignatureToOperationSourceName().computeIfAbsent(signature, s -> new ArrayList<>()).add(name);
+                    ValueSerializer userValueSerializer = StringUtils.isEmpty(metadata.getElementValueSerializer()) ? null : valueSerializerMap.getOrDefault(metadata.getElementValueSerializer(), null);
+                    if (userValueSerializer != null) {
+                        listCacheOperation.setValueSerializer(userValueSerializer);
+                    } else {
+                        internalValueSerializers.computeIfAbsent(cacheEntityType.getTypeName(), new Function<String, InternalObjectValueSerializer>() {
+                            @Override
+                            public InternalObjectValueSerializer apply(String s) {
+                                return new InternalObjectValueSerializer(cacheEntityType);
+                            }
+                        });
+                        listCacheOperation.setValueSerializer(
+                                internalValueSerializers.get(cacheEntityType.getTypeName())
+                        );
+                    }
+
+                    CacheEventCollector cacheEventCollector = new NamedCacheEventCollector(metadata.getMethodSignature());
+                    if (CacheManager.Config.metricsEnabled) {
+                        for (CacheStatsListener statsListener : this.statsListeners) {
+                            cacheEventCollector.register(statsListener);
+                        }
+                    }
+                    listCacheOperation.setCacheEventCollector(cacheEventCollector);
+
+                    listCacheOperation.initialized();
+                    String name = "listCache" + UUID.randomUUID().toString();
+                    cacheManager.getCacheOperationMap().put(name, listCacheOperation);
+                    cacheManager.getMethodSignatureToOperationSourceName().computeIfAbsent(signature, s -> new ArrayList<>()).add(name);
+                }
             }
         }
     }

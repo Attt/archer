@@ -7,7 +7,7 @@ import com.github.attt.archer.constants.Serialization;
 import com.github.attt.archer.exception.CacheOperationException;
 import com.github.attt.archer.expression.CacheExpressionUtilObject;
 import com.github.attt.archer.metadata.CacheMetadata;
-import com.github.attt.archer.operation.CacheOperation;
+import com.github.attt.archer.operation.api.AbstractCacheOperation;
 import com.github.attt.archer.operation.EvictionOperation;
 import com.github.attt.archer.processor.ListProcessor;
 import com.github.attt.archer.processor.ObjectProcessor;
@@ -19,10 +19,7 @@ import com.github.attt.archer.stats.api.listener.CacheStatsListener;
 import com.github.attt.archer.util.CommonUtils;
 import com.github.attt.archer.util.SpringElUtil;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 
 /**
@@ -62,7 +59,7 @@ public class CacheManager implements Component {
     /**
      * Manage all cache acceptation operation sources
      */
-    private Map<String, CacheOperation> cacheOperationMap = new ConcurrentHashMap<>();
+    private Map<String, AbstractCacheOperation> cacheOperationMap = new ConcurrentHashMap<>();
 
 
     /**
@@ -94,11 +91,11 @@ public class CacheManager implements Component {
         this.shardingCache = shardingCache;
     }
 
-    public Map<String, CacheOperation> getCacheOperationMap() {
+    public Map<String, AbstractCacheOperation> getCacheOperationMap() {
         return cacheOperationMap;
     }
 
-    public void setCacheOperationMap(Map<String, CacheOperation> cacheOperationMap) {
+    public void setCacheOperationMap(Map<String, AbstractCacheOperation> cacheOperationMap) {
         this.cacheOperationMap = cacheOperationMap;
     }
 
@@ -151,13 +148,13 @@ public class CacheManager implements Component {
      * @param <T>
      * @return
      */
-    public <T extends CacheOperation> List<T> getCacheOperations(String methodSignature, Class<T> sourceType) {
+    public <T extends AbstractCacheOperation> List<T> getCacheOperations(String methodSignature, Class<T> sourceType) {
         List<String> configNames = methodSignatureToOperationSourceName.getOrDefault(methodSignature, null);
 
         List<T> sources = new ArrayList<>();
         if (!CommonUtils.isEmpty(configNames)) {
             for (String configName : configNames) {
-                CacheOperation<CacheMetadata, Object> cacheOperation = cacheOperationMap.getOrDefault(configName, null);
+                AbstractCacheOperation<CacheMetadata, Object> cacheOperation = cacheOperationMap.getOrDefault(configName, null);
                 if (cacheOperation == null || !sourceType.isAssignableFrom(cacheOperation.getClass())) {
                     continue;
                 }
@@ -192,12 +189,21 @@ public class CacheManager implements Component {
     }
 
     /**
+     * Get all processors
+     *
+     * @return
+     */
+    public Collection<AbstractProcessor> getProcessors(){
+        return processors.values();
+    }
+
+    /**
      * Get cache processor which matches operation source
      *
      * @param cacheOperation
      * @return
      */
-    public AbstractProcessor getProcessor(CacheOperation cacheOperation) {
+    public AbstractProcessor getProcessor(AbstractCacheOperation cacheOperation) {
         List<String> componentInterfaces = new ArrayList<>();
         Class<?>[] interfaces = cacheOperation.getClass().getInterfaces();
         for (Class<?> ifc : interfaces) {

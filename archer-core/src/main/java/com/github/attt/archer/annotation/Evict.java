@@ -29,14 +29,14 @@ public @interface Evict {
      * <p>
      * If area is not empty, only the cache stored in this certain area will be evicted.
      */
-    String area() default DEFAULT_AREA;
+    String[] area() default DEFAULT_AREA;
 
     /**
      * Cache key
      * <p>
      * Support Spring Expression Language (SpEL)
      */
-    String key() default "";
+    String[] key() default "";
 
     /**
      * Custom key generator name

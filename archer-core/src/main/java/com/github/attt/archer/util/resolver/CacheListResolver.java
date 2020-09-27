@@ -5,15 +5,18 @@ import com.github.attt.archer.metadata.ClassCacheMetadata;
 import com.github.attt.archer.metadata.ListCacheMetadata;
 
 import java.lang.reflect.Method;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.List;
 
 /**
  * @author atpexgo.wu
  * @since 1.0
  */
-public class CacheListResolver implements AnnotationResolver<CacheList, ListCacheMetadata> {
+public class CacheListResolver implements AnnotationResolver<CacheList, List<ListCacheMetadata>> {
 
     @Override
-    public ListCacheMetadata resolve(Method method, ClassCacheMetadata classCacheMetadata, CacheList annotation) {
+    public List<ListCacheMetadata> resolve(Method method, ClassCacheMetadata classCacheMetadata, CacheList annotation) {
         ListCacheMetadata metadata = new ListCacheMetadata();
         resolveCommon(
                 metadata,
@@ -34,6 +37,7 @@ public class CacheListResolver implements AnnotationResolver<CacheList, ListCach
         metadata.setBreakdownProtect(annotation.breakdownProtect());
         metadata.setBreakdownProtectTimeoutInMillis(annotation.breakdownProtectTimeUnit().toMillis(annotation.breakdownProtectTimeout()));
         metadata.setElementArea(annotation.elementArea());
-        return metadata;
+        metadata.setElementExpirationInMillis(annotation.elementExpirationTimeUnit().toMillis(annotation.elementExpiration()));
+        return Collections.singletonList(metadata);
     }
 }

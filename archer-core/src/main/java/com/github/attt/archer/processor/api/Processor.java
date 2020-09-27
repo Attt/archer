@@ -7,11 +7,14 @@ import java.util.Map;
 /**
  * Cache processor
  *
- * @param <V> value type
+ * @param <CONTEXT>     processing context
+ * @param <OPERATION>   cache operation
+ * @param <E_OPERATION> evict operation
+ * @param <V>           value type
  * @author atpexgo
  * @since 1.0
  */
-public interface Processor<CONTEXT, OPERATION, V> {
+public interface Processor<CONTEXT, OPERATION, E_OPERATION, V> {
 
     /**
      * Get {@link V} using {@link OPERATION} with {@link CONTEXT}
@@ -49,25 +52,25 @@ public interface Processor<CONTEXT, OPERATION, V> {
     void putAll(Map<CONTEXT, V> contextValueMap, OPERATION cacheOperation);
 
     /**
-     * Delete {@link V} using {@link OPERATION} with {@link CONTEXT}
+     * Delete {@link V} using {@link E_OPERATION} with {@link CONTEXT}
      *
      * @param context
-     * @param cacheOperation
+     * @param evictCacheOperation
      */
-    void delete(CONTEXT context, OPERATION cacheOperation);
+    void delete(CONTEXT context, E_OPERATION evictCacheOperation);
 
     /**
-     * Delete all {@link V} using {@link OPERATION} with {@link CONTEXT} list
+     * Delete all {@link V} using {@link E_OPERATION} with {@link CONTEXT} list
      *
      * @param contextList
-     * @param cacheOperation
+     * @param evictCacheOperation
      */
-    void deleteAll(List<CONTEXT> contextList, OPERATION cacheOperation);
+    void deleteAll(List<CONTEXT> contextList, E_OPERATION evictCacheOperation);
 
     /**
      * Delete all using {@link OPERATION}
      *
-     * @param cacheOperation
+     * @param evictCacheOperation
      */
-    void deleteAll(OPERATION cacheOperation);
+    void deleteAll(E_OPERATION evictCacheOperation);
 }

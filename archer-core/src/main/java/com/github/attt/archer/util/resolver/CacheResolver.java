@@ -5,15 +5,17 @@ import com.github.attt.archer.metadata.ClassCacheMetadata;
 import com.github.attt.archer.metadata.ObjectCacheMetadata;
 
 import java.lang.reflect.Method;
+import java.util.Collections;
+import java.util.List;
 
 /**
  * @author atpexgo.wu
  * @since 1.0
  */
-public class CacheResolver implements AnnotationResolver<Cache, ObjectCacheMetadata> {
+public class CacheResolver implements AnnotationResolver<Cache, List<ObjectCacheMetadata>> {
 
     @Override
-    public ObjectCacheMetadata resolve(Method method, ClassCacheMetadata classCacheMetadata, Cache annotation) {
+    public List<ObjectCacheMetadata> resolve(Method method, ClassCacheMetadata classCacheMetadata, Cache annotation) {
         ObjectCacheMetadata metadata = new ObjectCacheMetadata();
         resolveCommon(
                 metadata,
@@ -32,6 +34,6 @@ public class CacheResolver implements AnnotationResolver<Cache, ObjectCacheMetad
         metadata.setBreakdownProtectTimeoutInMillis(annotation.breakdownProtectTimeUnit().toMillis(annotation.breakdownProtectTimeout()));
         metadata.setValueSerializer(chooseValue(classCacheMetadata.getValueSerializer(), annotation.valueSerializer()));
 
-        return metadata;
+        return Collections.singletonList(metadata);
     }
 }

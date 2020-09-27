@@ -13,10 +13,11 @@ import com.github.attt.archer.loader.SingleLoader;
 import com.github.attt.archer.metadata.EvictionMetadata;
 import com.github.attt.archer.metadata.ListCacheMetadata;
 import com.github.attt.archer.metadata.ObjectCacheMetadata;
-import com.github.attt.archer.operation.CacheOperation;
+import com.github.attt.archer.metadata.api.AbstractCacheMetadata;
 import com.github.attt.archer.operation.EvictionOperation;
 import com.github.attt.archer.operation.ListCacheOperation;
 import com.github.attt.archer.operation.ObjectCacheOperation;
+import com.github.attt.archer.operation.api.AbstractCacheOperation;
 import com.github.attt.archer.stats.api.CacheEvent;
 import com.github.attt.archer.stats.api.listener.CacheStatsListener;
 import com.github.attt.archer.stats.collector.NamedCacheEventCollector;
@@ -63,7 +64,7 @@ public class CacheBeanDefinitionRegistryProcessor implements BeanDefinitionRegis
      * It will be passed to {@link CacheManager} bean after all operation source
      * registered.
      */
-    private final Map<String, List<String>> methodSignatureToOperationSourceName = new ConcurrentHashMap<>();
+    private final Map<String, List<String>> methodSignatureToOperationName = new ConcurrentHashMap<>();
 
     private ClassLoader classLoader;
 
@@ -138,42 +139,46 @@ public class CacheBeanDefinitionRegistryProcessor implements BeanDefinitionRegis
 
         final Type returnType = method.getGenericReturnType();
 
-        final ObjectCacheMetadata metadata = (ObjectCacheMetadata) CacheUtils.resolveMetadata(method, annotation);
+        List<AbstractCacheMetadata> metadataList = CacheUtils.resolveMetadata(method, annotation);
+        for (AbstractCacheMetadata abstractMetadata : metadataList) {
+            final ObjectCacheMetadata metadata = (ObjectCacheMetadata) abstractMetadata;
 
-        Type cacheEntityType = metadata.isMultiple() ? CacheUtils.parseCacheEntityType(method) : returnType;
+            Type cacheEntityType = metadata.isMultiple() ? CacheUtils.parseCacheEntityType(method) : returnType;
 
-        if (CacheManager.Config.valueSerialization == Serialization.HESSIAN || CacheManager.Config.valueSerialization == Serialization.JAVA) {
-            if (!Serializable.class.isAssignableFrom(ReflectionUtil.toClass(cacheEntityType))) {
-                throw new CacheBeanParsingException("To use Hessian or Java serialization, " + cacheEntityType.getTypeName() + " must implement java.io.Serializable");
+            if (CacheManager.Config.valueSerialization == Serialization.HESSIAN || CacheManager.Config.valueSerialization == Serialization.JAVA) {
+                if (!Serializable.class.isAssignableFrom(ReflectionUtil.toClass(cacheEntityType))) {
+                    throw new CacheBeanParsingException("To use Hessian or Java serialization, " + cacheEntityType.getTypeName() + " must implement java.io.Serializable");
+                }
             }
+
+            logger.debug("CacheClass is : {}", cacheEntityType.getTypeName());
+
+            // value serializer
+            final String userValueSerializer = metadata.getValueSerializer();
+            Object valueSerializer;
+            if (CommonUtils.isEmpty(userValueSerializer)) {
+                valueSerializer = internalValueSerializers.getOrDefault(cacheEntityType.getTypeName(),
+                        new InternalObjectValueSerializer<>(cacheEntityType));
+            } else {
+                valueSerializer = new RuntimeBeanReference(userValueSerializer);
+            }
+
+            // register cache operation source bean definition
+            AbstractBeanDefinition cacheOperationDefinition = BeanDefinitionBuilder.genericBeanDefinition(ObjectCacheOperation.class)
+                    .addPropertyValue("metadata", metadata)
+                    .addPropertyValue("loader", metadata.isMultiple() ? null : CacheUtils.resolveSingleLoader(method))
+                    .addPropertyValue("multipleLoader", metadata.isMultiple() ? CacheUtils.resolveMultiLoader(method) : null)
+                    .addPropertyValue("valueSerializer", valueSerializer)
+                    .addPropertyValue("cacheEventCollector", new NamedCacheEventCollector(metadata.getMethodSignature()))
+                    .getBeanDefinition();
+
+            String operationName = beanNameGenerator.generateBeanName(cacheOperationDefinition, registry);
+            registry.registerBeanDefinition(operationName, cacheOperationDefinition);
+
+            // mapping method to operation source bean
+            methodSignatureToOperationName.computeIfAbsent(methodSignature, sigKey -> new ArrayList<>()).add(operationName);
         }
 
-        logger.debug("CacheClass is : {}", cacheEntityType.getTypeName());
-
-        // value serializer
-        final String userValueSerializer = metadata.getValueSerializer();
-        Object valueSerializer;
-        if (CommonUtils.isEmpty(userValueSerializer)) {
-            valueSerializer = internalValueSerializers.getOrDefault(cacheEntityType.getTypeName(),
-                    new InternalObjectValueSerializer<>(cacheEntityType));
-        } else {
-            valueSerializer = new RuntimeBeanReference(userValueSerializer);
-        }
-
-        // register cache operation source bean definition
-        AbstractBeanDefinition cacheOperationDefinition = BeanDefinitionBuilder.genericBeanDefinition(ObjectCacheOperation.class)
-                .addPropertyValue("metadata", metadata)
-                .addPropertyValue("loader", metadata.isMultiple() ? null : CacheUtils.resolveSingleLoader(method))
-                .addPropertyValue("multipleLoader", metadata.isMultiple() ? CacheUtils.resolveMultiLoader(method) : null)
-                .addPropertyValue("valueSerializer", valueSerializer)
-                .addPropertyValue("cacheEventCollector", new NamedCacheEventCollector(metadata.getMethodSignature()))
-                .getBeanDefinition();
-
-        String operationName = beanNameGenerator.generateBeanName(cacheOperationDefinition, registry);
-        registry.registerBeanDefinition(operationName, cacheOperationDefinition);
-
-        // mapping method to operation source bean
-        methodSignatureToOperationSourceName.computeIfAbsent(methodSignature, sigKey -> new ArrayList<>()).add(operationName);
     }
 
 
@@ -199,39 +204,42 @@ public class CacheBeanDefinitionRegistryProcessor implements BeanDefinitionRegis
             }
         }
 
-        final ListCacheMetadata metadata = (ListCacheMetadata) CacheUtils.resolveMetadata(method, annotation);
+        List<AbstractCacheMetadata> metadataList = CacheUtils.resolveMetadata(method, annotation);
+        for (AbstractCacheMetadata abstractMetadata : metadataList) {
+            final ListCacheMetadata metadata = (ListCacheMetadata) abstractMetadata;
 
-        logger.debug("CacheEntityClass is : {}", cacheEntityType.getTypeName());
+            logger.debug("CacheEntityClass is : {}", cacheEntityType.getTypeName());
 
-        // create loader proxy
-        SingleLoader<?> loader = CacheUtils.createListableCacheLoader();
+            // create loader proxy
+            SingleLoader<?> loader = CacheUtils.createListableCacheLoader();
 
-        // operation source class
-        BeanDefinitionBuilder cacheOperationDefinitionBuilder = BeanDefinitionBuilder.genericBeanDefinition(ListCacheOperation.class);
+            // operation source class
+            BeanDefinitionBuilder cacheOperationDefinitionBuilder = BeanDefinitionBuilder.genericBeanDefinition(ListCacheOperation.class);
 
-        // value serializer
-        final String userElementValueSerializer = metadata.getElementValueSerializer();
-        Object valueSerializer;
-        if (CommonUtils.isEmpty(userElementValueSerializer)) {
-            valueSerializer = internalValueSerializers.getOrDefault(cacheEntityType.getTypeName(),
-                    new InternalObjectValueSerializer<>(cacheEntityType));
-        } else {
-            valueSerializer = new RuntimeBeanReference(userElementValueSerializer);
+            // value serializer
+            final String userElementValueSerializer = metadata.getElementValueSerializer();
+            Object valueSerializer;
+            if (CommonUtils.isEmpty(userElementValueSerializer)) {
+                valueSerializer = internalValueSerializers.getOrDefault(cacheEntityType.getTypeName(),
+                        new InternalObjectValueSerializer<>(cacheEntityType));
+            } else {
+                valueSerializer = new RuntimeBeanReference(userElementValueSerializer);
+            }
+
+            // register cache operation source bean definition
+            AbstractBeanDefinition cacheOperationDefinition = cacheOperationDefinitionBuilder
+                    .addPropertyValue("metadata", metadata)
+                    .addPropertyValue("loader", loader)
+                    .addPropertyValue("valueSerializer", valueSerializer)
+                    .addPropertyValue("cacheEventCollector", new NamedCacheEventCollector(metadata.getMethodSignature()))
+                    .getBeanDefinition();
+
+            String operationName = beanNameGenerator.generateBeanName(cacheOperationDefinition, registry);
+            registry.registerBeanDefinition(operationName, cacheOperationDefinition);
+
+            // mapping method to operation source bean
+            methodSignatureToOperationName.computeIfAbsent(methodSignature, sigKey -> new ArrayList<>()).add(operationName);
         }
-
-        // register cache operation source bean definition
-        AbstractBeanDefinition cacheOperationDefinition = cacheOperationDefinitionBuilder
-                .addPropertyValue("metadata", metadata)
-                .addPropertyValue("loader", loader)
-                .addPropertyValue("valueSerializer", valueSerializer)
-                .addPropertyValue("cacheEventCollector", new NamedCacheEventCollector(metadata.getMethodSignature()))
-                .getBeanDefinition();
-
-        String operationName = beanNameGenerator.generateBeanName(cacheOperationDefinition, registry);
-        registry.registerBeanDefinition(operationName, cacheOperationDefinition);
-
-        // mapping method to operation source bean
-        methodSignatureToOperationSourceName.computeIfAbsent(methodSignature, sigKey -> new ArrayList<>()).add(operationName);
     }
 
     private void registerEvictionCacheOperationSource(
@@ -240,19 +248,22 @@ public class CacheBeanDefinitionRegistryProcessor implements BeanDefinitionRegis
             final BeanDefinitionRegistry registry) {
         final String methodSignature = ReflectionUtil.getSignature(method, true, true);
         for (Annotation annotation : annotationList) {
-            EvictionMetadata metadata = (EvictionMetadata) CacheUtils.resolveMetadata(method, annotation);
+            List<AbstractCacheMetadata> metadataList = CacheUtils.resolveMetadata(method, annotation);
+            for (AbstractCacheMetadata abstractMetadata : metadataList) {
+                EvictionMetadata metadata = (EvictionMetadata) abstractMetadata;
 
-            // register cache OperationSource bean definition
-            AbstractBeanDefinition cacheEvictionOperationSourceDefinition = BeanDefinitionBuilder.genericBeanDefinition(EvictionOperation.class)
-                    .addPropertyValue("metadata", metadata)
-                    .addPropertyValue("cacheEventCollector", new NamedCacheEventCollector(metadata.getMethodSignature()))
-                    .getBeanDefinition();
+                // register cache OperationSource bean definition
+                AbstractBeanDefinition evictionOperationDefinition = BeanDefinitionBuilder.genericBeanDefinition(EvictionOperation.class)
+                        .addPropertyValue("metadata", metadata)
+                        .addPropertyValue("cacheEventCollector", new NamedCacheEventCollector(metadata.getMethodSignature()))
+                        .getBeanDefinition();
 
-            String operationSourceName = beanNameGenerator.generateBeanName(cacheEvictionOperationSourceDefinition, registry);
-            registry.registerBeanDefinition(operationSourceName, cacheEvictionOperationSourceDefinition);
+                String operationName = beanNameGenerator.generateBeanName(evictionOperationDefinition, registry);
+                registry.registerBeanDefinition(operationName, evictionOperationDefinition);
 
-            // mapping method to OperationSource bean
-            methodSignatureToOperationSourceName.computeIfAbsent(methodSignature, sigKey -> new ArrayList<>()).add(operationSourceName);
+                // mapping method to OperationSource bean
+                methodSignatureToOperationName.computeIfAbsent(methodSignature, sigKey -> new ArrayList<>()).add(operationName);
+            }
         }
     }
 
@@ -270,7 +281,7 @@ public class CacheBeanDefinitionRegistryProcessor implements BeanDefinitionRegis
         // register cache manager
         CacheManager cacheManager = new CacheManager();
         // pass reference to cacheManager
-        cacheManager.setMethodSignatureToOperationSourceName(methodSignatureToOperationSourceName);
+        cacheManager.setMethodSignatureToOperationSourceName(methodSignatureToOperationName);
 
         Map<String, KeyGenerator> keyGeneratorMap = beanFactory.getBeansOfType(KeyGenerator.class);
         cacheManager.setKeyGeneratorMap(keyGeneratorMap);
@@ -283,7 +294,7 @@ public class CacheBeanDefinitionRegistryProcessor implements BeanDefinitionRegis
         cacheManager.setShardingCache(shardingCache);
 
         // cache operations
-        Map<String, CacheOperation> cacheOperationMap = beanFactory.getBeansOfType(CacheOperation.class);
+        Map<String, AbstractCacheOperation> cacheOperationMap = beanFactory.getBeansOfType(AbstractCacheOperation.class);
         Map<String, EvictionOperation> evictionOperationMap = beanFactory.getBeansOfType(EvictionOperation.class);
 
         // register cache stats listeners
@@ -292,7 +303,7 @@ public class CacheBeanDefinitionRegistryProcessor implements BeanDefinitionRegis
             Map<String, CacheStatsListener> statsListenerMap = beanFactory.getBeansOfType(CacheStatsListener.class);
             cacheManager.setStatsListenerMap(statsListenerMap);
 
-            for (CacheOperation cacheOperation : cacheOperationMap.values()) {
+            for (AbstractCacheOperation cacheOperation : cacheOperationMap.values()) {
                 for (CacheStatsListener<CacheEvent> statsListener : statsListenerMap.values()) {
                     cacheOperation.getCacheEventCollector().register(statsListener);
                 }

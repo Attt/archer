@@ -7,6 +7,8 @@ import com.github.attt.archer.example.model.User;
 
 import java.util.List;
 
+import static com.github.attt.archer.constants.Constants.DEFAULT_AREA;
+
 /**
  * @author atpexgo.wu
  * @since 1.0.0
@@ -116,6 +118,12 @@ public interface UserService {
      */
     @Evict(all = true, area = "custom")
     void deleteAllCustomAreaUser();
+
+    /**
+     * 淘汰整个缓存区域, 所有area
+     */
+    @Evict(all = true, area = {"custom", DEFAULT_AREA})
+    void deleteAllAreaUser();
 
     /**
      * 淘汰缓存

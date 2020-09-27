@@ -1,48 +1,39 @@
 package com.github.attt.archer.operation.api;
 
-import com.github.attt.archer.metadata.api.AbstractCacheMetadata;
-import com.github.attt.archer.roots.Component;
-import com.github.attt.archer.stats.api.CacheEventCollector;
-
-import static com.github.attt.archer.constants.Constants.DEFAULT_DELIMITER;
+import com.github.attt.archer.loader.MultipleLoader;
+import com.github.attt.archer.loader.SingleLoader;
+import com.github.attt.archer.metadata.CacheMetadata;
+import com.github.attt.archer.operation.api.AbstractOperation;
 
 /**
- * Abstract cache operation
+ * Cache acceptation operation
  *
+ * @param <M> metadata type
+ * @param <V> cache value type
  * @author atpexgo.wu
+ * @see CacheMetadata
  * @since 1.0
  */
-public abstract class AbstractCacheOperation<M extends AbstractCacheMetadata> implements Component {
+public abstract class AbstractCacheOperation<M extends CacheMetadata, V> extends AbstractOperation<M> {
 
-    private String cacheType;
+    protected SingleLoader<V> loader;
 
-    protected M metadata;
+    protected MultipleLoader<V> multipleLoader;
 
-    protected CacheEventCollector cacheEventCollector;
-
-    public M getMetadata() {
-        return metadata;
+    public SingleLoader<V> getLoader() {
+        return loader;
     }
 
-    public void setMetadata(M metadata) {
-        this.metadata = metadata;
+    public void setLoader(SingleLoader<V> loader) {
+        this.loader = loader;
     }
 
-    public CacheEventCollector getCacheEventCollector() {
-        return cacheEventCollector;
+    public MultipleLoader<V> getMultipleLoader() {
+        return multipleLoader;
     }
 
-    public void setCacheEventCollector(CacheEventCollector cacheEventCollector) {
-        this.cacheEventCollector = cacheEventCollector;
+    public void setMultipleLoader(MultipleLoader<V> multipleLoader) {
+        this.multipleLoader = multipleLoader;
     }
 
-    public String getCacheType() {
-        if (cacheType == null) {
-            String methodSignature = getMetadata().getMethodSignature();
-            String condition = getMetadata().getCondition();
-            cacheType = methodSignature + " " + DEFAULT_DELIMITER
-                    + condition + " ";
-        }
-        return cacheType;
-    }
 }

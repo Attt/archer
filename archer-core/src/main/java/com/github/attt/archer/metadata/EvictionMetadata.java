@@ -3,6 +3,8 @@ package com.github.attt.archer.metadata;
 import com.github.attt.archer.annotation.Evict;
 import com.github.attt.archer.metadata.api.AbstractCacheMetadata;
 
+import java.util.Arrays;
+
 /**
  * {@link Evict} annotation metadata
  *

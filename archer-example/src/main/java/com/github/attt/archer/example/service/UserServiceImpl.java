@@ -89,6 +89,12 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
+    public void deleteAllAreaUser() {
+        // disabled for retest
+//        userRepository.deleteAllUser();
+    }
+
+    @Override
     public void renameUser(Long userId, String userName) {
         User user = userRepository.queryUser(userId);
         if (user != null) {

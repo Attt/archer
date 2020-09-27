@@ -7,12 +7,13 @@ import com.github.attt.archer.util.ReflectionUtil;
 
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Method;
+import java.util.List;
 
 /**
  * @author atpexgo.wu
  * @since 1.0
  */
-public interface AnnotationResolver<T extends Annotation, R extends AbstractCacheMetadata> {
+public interface AnnotationResolver<T extends Annotation, R extends List<? extends AbstractCacheMetadata>> {
 
     /**
      * Resolve annotation to metadata

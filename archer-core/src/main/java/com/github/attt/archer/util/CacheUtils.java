@@ -40,7 +40,7 @@ public class CacheUtils {
      * @return
      * @see AbstractCacheMetadata
      */
-    public static AbstractCacheMetadata resolveMetadata(Method method, Annotation annotation) {
+    public static List<AbstractCacheMetadata> resolveMetadata(Method method, Annotation annotation) {
         Class<?> methodClass = method.getDeclaringClass();
         Cacheable cacheable = ReflectionUtil.getCacheAnnotation(methodClass, Cacheable.class);
         return resolveMetadata(cacheable, method, annotation);
@@ -70,7 +70,7 @@ public class CacheUtils {
      * @return
      */
     @SuppressWarnings({"rawtypes", "unchecked"})
-    public static AbstractCacheMetadata resolveMetadata(Cacheable serviceCacheable, Method method, Annotation annotation) {
+    public static List<AbstractCacheMetadata> resolveMetadata(Cacheable serviceCacheable, Method method, Annotation annotation) {
 
         ClassCacheMetadata classCacheMetadata = new ClassCacheMetadata();
         classCacheMetadata.setKeyPrefix(

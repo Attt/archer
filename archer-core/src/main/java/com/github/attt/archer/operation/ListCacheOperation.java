@@ -5,6 +5,7 @@ import com.alibaba.fastjson.TypeReference;
 import com.github.attt.archer.components.api.ValueSerializer;
 import com.github.attt.archer.components.internal.InternalObjectValueSerializer;
 import com.github.attt.archer.metadata.ListCacheMetadata;
+import com.github.attt.archer.operation.api.AbstractCacheOperation;
 import com.github.attt.archer.roots.ListComponent;
 
 import java.util.Collection;
@@ -16,7 +17,7 @@ import java.util.List;
  * @param <V> object cache value type
  * @author atpexgo.wu
  */
-public class ListCacheOperation<V> extends CacheOperation<ListCacheMetadata, Collection<V>> implements ListComponent {
+public class ListCacheOperation<V> extends AbstractCacheOperation<ListCacheMetadata, Collection<V>> implements ListComponent {
 
     private ValueSerializer<List<String>> elementCacheKeySerializer = new InternalObjectValueSerializer(new TypeReference<List<String>>() {
     }.getType());

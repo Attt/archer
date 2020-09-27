@@ -3,6 +3,7 @@ package com.github.attt.archer.operation;
 
 import com.github.attt.archer.components.api.ValueSerializer;
 import com.github.attt.archer.metadata.ObjectCacheMetadata;
+import com.github.attt.archer.operation.api.AbstractCacheOperation;
 import com.github.attt.archer.roots.ObjectComponent;
 
 /**
@@ -12,13 +13,13 @@ import com.github.attt.archer.roots.ObjectComponent;
  * @author atpexgo.wu
  * @since 1.0
  */
-public class ObjectCacheOperation<V> extends CacheOperation<ObjectCacheMetadata, V> implements ObjectComponent {
+public class ObjectCacheOperation<V> extends AbstractCacheOperation<ObjectCacheMetadata, V> implements ObjectComponent {
 
     private ValueSerializer<V> valueSerializer;
 
     @Override
     public String toString() {
-        return "ObjectCacheOperationSource{" +
+        return "ObjectCacheOperation{" +
                 "valueSerializer=" + valueSerializer +
                 ", metadata=" + metadata +
                 '}';

@@ -3,7 +3,7 @@ package com.github.attt.archer.util;
 import com.github.attt.archer.CacheManager;
 import com.github.attt.archer.components.api.KeyGenerator;
 import com.github.attt.archer.components.api.Serializer;
-import com.github.attt.archer.operation.CacheOperation;
+import com.github.attt.archer.operation.api.AbstractCacheOperation;
 import com.github.attt.archer.operation.EvictionOperation;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -36,7 +36,7 @@ public class InfoPrinter {
      */
     public static void printComponentUsageInfo(CacheManager cacheManager) {
         Map<String, EvictionOperation> evictionConfigMap = cacheManager.getEvictionOperationMap();
-        Map<String, CacheOperation> acceptationConfigMap = cacheManager.getCacheOperationMap();
+        Map<String, AbstractCacheOperation> acceptationConfigMap = cacheManager.getCacheOperationMap();
         Map<String, KeyGenerator> keyGeneratorMap = cacheManager.getKeyGeneratorMap();
         Map<String, Serializer> serializerMap = cacheManager.getSerializerMap();
         Map<String, List<String>> methodSignatureToOperationSourceName = cacheManager.getMethodSignatureToOperationSourceName();

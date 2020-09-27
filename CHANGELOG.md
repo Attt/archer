@@ -1,3 +1,7 @@
+### 1.0 release candidate 3
+1. ``area`` and ``key`` property support array in ``@Evict``
+2. ``elementArea`` and ``elementKey`` property support array in ``@EvictMulti``
+
 ### 1.0 release candidate 2
 
 #### news

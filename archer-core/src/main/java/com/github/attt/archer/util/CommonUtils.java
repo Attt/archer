@@ -140,4 +140,14 @@ public class CommonUtils {
         }
         return supplier.get();
     }
+
+    public static boolean contains(Object[] array, Object obj) {
+        for (Object o : array) {
+            if (o.equals(obj)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
 }

@@ -5,16 +5,18 @@ import com.github.attt.archer.metadata.ClassCacheMetadata;
 import com.github.attt.archer.metadata.ObjectCacheMetadata;
 
 import java.lang.reflect.Method;
+import java.util.Collections;
+import java.util.List;
 
 /**
  * @author atpexgo.wu
  * @since 1.0
  */
-public class CacheMultiResolver implements AnnotationResolver<CacheMulti, ObjectCacheMetadata> {
+public class CacheMultiResolver implements AnnotationResolver<CacheMulti, List<ObjectCacheMetadata>> {
 
 
     @Override
-    public ObjectCacheMetadata resolve(Method method, ClassCacheMetadata classCacheMetadata, CacheMulti annotation) {
+    public List<ObjectCacheMetadata> resolve(Method method, ClassCacheMetadata classCacheMetadata, CacheMulti annotation) {
         ObjectCacheMetadata metadata = new ObjectCacheMetadata();
         resolveCommon(
                 metadata,
@@ -35,6 +37,6 @@ public class CacheMultiResolver implements AnnotationResolver<CacheMulti, Object
         metadata.setOrderBy(annotation.orderBy());
         metadata.setMultiple(true);
 
-        return metadata;
+        return Collections.singletonList(metadata);
     }
 }
