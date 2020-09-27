@@ -7,7 +7,6 @@ import com.github.attt.archer.annotation.CacheMulti;
 import com.github.attt.archer.cache.internal.ShardingCache;
 import com.github.attt.archer.components.internal.InternalElementKeyGenerator;
 import com.github.attt.archer.components.internal.InternalKeyGenerator;
-import com.github.attt.archer.invocation.CacheContext;
 import com.github.attt.archer.metadata.CacheMetadata;
 import com.github.attt.archer.metadata.api.AbstractCacheMetadata;
 import com.github.attt.archer.operation.EvictionOperation;
@@ -31,6 +30,8 @@ import java.util.concurrent.TimeUnit;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
 
+import static com.github.attt.archer.constants.Constants.DEFAULT_DELIMITER;
+
 
 /**
  * Abstract service cache processor
@@ -38,7 +39,7 @@ import java.util.function.Supplier;
  * @author atpexgo.wu
  * @since 1.0
  */
-public abstract class AbstractProcessor<C extends AbstractCacheOperation<?, V>, V> implements Processor<InvocationContext, C, EvictionOperation, V> {
+public abstract class AbstractProcessor<C extends AbstractCacheOperation<?, V>, V> implements Processor<InvocationContext, C, EvictionOperation, V>, ManualProcessor {
 
     private final static Logger logger = LoggerFactory.getLogger(AbstractProcessor.class);
 
@@ -46,7 +47,7 @@ public abstract class AbstractProcessor<C extends AbstractCacheOperation<?, V>, 
 
     private final InternalElementKeyGenerator elementKeyGenerator = new InternalElementKeyGenerator();
 
-    private final NamedCacheEventCollector anonymousCacheEventCollector = new NamedCacheEventCollector("anonymous");
+    private final NamedCacheEventCollector manualCacheEventCollector = new NamedCacheEventCollector("manual");
 
     protected ShardingCache cache;
 
@@ -89,15 +90,19 @@ public abstract class AbstractProcessor<C extends AbstractCacheOperation<?, V>, 
         cache.removeAll(cacheOperation.getMetadata().getArea(), cacheOperation.getCacheEventCollector());
     }
 
-    /**
-     * It's tricky way for {@link CacheContext} to remove
-     * cache by key in string literal
-     *
-     * @param area
-     * @param key
-     */
-    public void deleteWithKey(String area, String key) {
-        cache.remove(area, key, anonymousCacheEventCollector);
+    @Override
+    public void delete(String area, String key) {
+        cache.remove(area, area + DEFAULT_DELIMITER + key, manualCacheEventCollector);
+    }
+
+    @Override
+    public void deleteAll(String area) {
+        cache.removeAll(area, manualCacheEventCollector);
+    }
+
+    @Override
+    public boolean exist(String area, String key) {
+        return cache.containsKey(area, area + DEFAULT_DELIMITER + key, manualCacheEventCollector);
     }
 
     protected String generateCacheKey(InvocationContext context, AbstractCacheMetadata metadata) {
@@ -271,7 +276,7 @@ public abstract class AbstractProcessor<C extends AbstractCacheOperation<?, V>, 
 
     public void afterInitialized(CacheManager cacheManager) {
         for (CacheStatsListener<CacheEvent> statsListener : cacheManager.getStatsListenerMap().values()) {
-            anonymousCacheEventCollector.register(statsListener);
+            manualCacheEventCollector.register(statsListener);
         }
         cache = cacheManager.getShardingCache();
     }

@@ -98,7 +98,9 @@ public class UserServiceImpl implements UserService {
     public void renameUser(Long userId, String userName) {
         User user = userRepository.queryUser(userId);
         if (user != null) {
-            CacheContext.evictList("archer:example:user:page:1");
+            if(CacheContext.exist("archer:example:user:page:1")) {
+                CacheContext.evict("archer:example:user:page:1");
+            }
             userRepository.renameUser(userId, userName);
         }
     }

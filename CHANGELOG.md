@@ -2,6 +2,7 @@
 #### updates
 1. ``area`` and ``key`` property support array in ``@Evict``
 2. ``elementArea`` and ``elementKey`` property support array in ``@EvictMulti``
+3. refactor ``CacheContext``
 
 ### 1.0 release candidate 2
 

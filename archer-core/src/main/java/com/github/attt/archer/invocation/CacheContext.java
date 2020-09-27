@@ -2,10 +2,10 @@ package com.github.attt.archer.invocation;
 
 import com.github.attt.archer.CacheManager;
 import com.github.attt.archer.processor.api.AbstractProcessor;
-import com.github.attt.archer.roots.ListComponent;
-import com.github.attt.archer.roots.ObjectComponent;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import java.util.Collection;
 
 import static com.github.attt.archer.constants.Constants.DEFAULT_AREA;
 
@@ -51,27 +51,74 @@ public class CacheContext {
         return old;
     }
 
-    public static void evictList(String key) {
-        AbstractProcessor processor = cacheManager.getProcessor(ListComponent.class);
-        evict(DEFAULT_AREA, key, processor);
+    /**
+     * Evict cache with certain key
+     *
+     * @param key
+     */
+    public static void evict(String key) {
+        Collection<AbstractProcessor> processors = cacheManager.getProcessors();
+        for (AbstractProcessor processor : processors) {
+            processor.delete(DEFAULT_AREA, key);
+        }
     }
 
-    public static void evictObject(String key) {
-        AbstractProcessor processor = cacheManager.getProcessor(ObjectComponent.class);
-        evict(DEFAULT_AREA, key, processor);
+    /**
+     * Evict cache with certain area and key
+     *
+     * @param area
+     * @param key
+     */
+    public static void evict(String area, String key) {
+        Collection<AbstractProcessor> processors = cacheManager.getProcessors();
+        for (AbstractProcessor processor : processors) {
+            processor.delete(area, key);
+        }
     }
 
-    public static void evictList(String area, String key) {
-        AbstractProcessor processor = cacheManager.getProcessor(ListComponent.class);
-        evict(area, key, processor);
+    /**
+     * Evict all caches with certain area
+     *
+     * @param area
+     */
+    public static void evictAll(String area) {
+        Collection<AbstractProcessor> processors = cacheManager.getProcessors();
+        for (AbstractProcessor processor : processors) {
+            processor.deleteAll(area);
+        }
     }
 
-    public static void evictObject(String area, String key) {
-        AbstractProcessor processor = cacheManager.getProcessor(ObjectComponent.class);
-        evict(area, key, processor);
+    /**
+     * If cache with specified key exists in default area
+     *
+     * @param area
+     * @param key
+     */
+    public static boolean exist(String key) {
+        Collection<AbstractProcessor> processors = cacheManager.getProcessors();
+        for (AbstractProcessor processor : processors) {
+            boolean exist = processor.exist(DEFAULT_AREA, key);
+            if (exist) {
+                return true;
+            }
+        }
+        return false;
     }
 
-    private static void evict(String area, String key, AbstractProcessor processor) {
-        processor.deleteWithKey(area, key);
+    /**
+     * If cache with specified area and key exists
+     *
+     * @param area
+     * @param key
+     */
+    public static boolean exist(String area, String key) {
+        Collection<AbstractProcessor> processors = cacheManager.getProcessors();
+        for (AbstractProcessor processor : processors) {
+            boolean exist = processor.exist(area, key);
+            if (exist) {
+                return true;
+            }
+        }
+        return false;
     }
 }

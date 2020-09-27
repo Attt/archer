@@ -238,6 +238,10 @@ public class CacheManager implements Component {
         vars.put("util", CacheExpressionUtilObject.class);
         SpringElUtil.init(vars);
 
+        // note: add complex cache processor before object cache processor
+        // because complex cache may has the same key name with object cache
+        // but need deal with more data than object cache when evicting
+
         ListProcessor<?> listServiceCacheProcessor = new ListProcessor<>();
         listServiceCacheProcessor.afterInitialized(this);
         processors.put(ListComponent.class.toString(), listServiceCacheProcessor);
