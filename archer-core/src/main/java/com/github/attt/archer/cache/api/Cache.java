@@ -176,6 +176,9 @@ public interface Cache {
 
         private long ttl;
 
+        public DefaultEntry() {
+        }
+
         public DefaultEntry(String key, byte[] value, long ttl) {
             this.key = key;
             this.value = value;

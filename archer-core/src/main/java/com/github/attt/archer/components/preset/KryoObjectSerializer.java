@@ -5,6 +5,7 @@ import com.esotericsoftware.kryo.io.Input;
 import com.esotericsoftware.kryo.io.Output;
 import com.github.attt.archer.components.api.ValueSerializer;
 import com.github.attt.archer.util.ReflectionUtil;
+import de.javakaffee.kryoserializers.SynchronizedCollectionsSerializer;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
@@ -23,6 +24,8 @@ public class KryoObjectSerializer<T> implements ValueSerializer<T> {
             Kryo kryo = new Kryo();
             kryo.setReferences(false);
             kryo.register(type);
+            // fix 2020-10-30 register collections which have no no-args constructor
+            SynchronizedCollectionsSerializer.registerSerializers(kryo);
             return kryo;
         }
     });
@@ -44,6 +47,9 @@ public class KryoObjectSerializer<T> implements ValueSerializer<T> {
             return (T) kryo.readClassAndObject(input);
         } catch (Exception e) {
             throw new RuntimeException(e);
+        } finally {
+            // fix 2020-10-30 prevent memory leak
+            kryos.remove();
         }
     }
 
@@ -58,6 +64,9 @@ public class KryoObjectSerializer<T> implements ValueSerializer<T> {
             return baos.toByteArray();
         } catch (IOException e) {
             throw new RuntimeException(e);
+        } finally {
+            // fix 2020-10-30 prevent memory leak
+            kryos.remove();
         }
     }
 }
