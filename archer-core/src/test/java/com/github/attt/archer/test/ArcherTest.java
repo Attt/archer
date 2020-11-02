@@ -13,6 +13,7 @@ import org.junit.jupiter.api.Test;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.concurrent.TimeUnit;
 
 /**
  * @author atpexgo.wu
@@ -122,5 +123,11 @@ public class ArcherTest {
             this.name = name;
             this.id = id;
         }
+    }
+
+    @Test
+    public void testExpiration(){
+        long millis = TimeUnit.MILLISECONDS.toMillis(-1L);
+        System.out.println(millis);
     }
 }
