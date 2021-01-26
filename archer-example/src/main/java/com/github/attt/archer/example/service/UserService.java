@@ -1,8 +1,8 @@
 package com.github.attt.archer.example.service;
 
 
-import com.github.attt.archer.annotation.*;
-import com.github.attt.archer.annotation.extra.MapTo;
+import com.github.attt.archer.cache.annotation.*;
+import com.github.attt.archer.cache.annotation.extra.MapTo;
 import com.github.attt.archer.example.model.User;
 
 import java.util.List;

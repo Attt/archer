@@ -1,8 +1,7 @@
 package com.github.attt.archer.util;
 
 import com.alibaba.fastjson.JSON;
-import com.github.attt.archer.annotation.*;
-import com.github.attt.archer.annotation.extra.MapTo;
+import com.github.attt.archer.cache.annotation.*;
 import org.reflections.Configuration;
 import org.reflections.Reflections;
 import org.reflections.scanners.*;
@@ -30,12 +29,12 @@ public class ReflectionUtil extends Reflections {
 
     @SuppressWarnings("unchecked")
     private static final Class<Annotation>[] CACHE_METHOD_PARAMETER_ANNOTATIONS = new Class[]{
-            MapTo.class
+            CacheMapping.class
     };
 
     @SuppressWarnings("unchecked")
     private static final Class<Annotation>[] OBJECT_CACHE_METHOD_ANNOTATIONS = new Class[]{
-            Cache.class, CacheMulti.class
+            Cache.class
     };
 
     @SuppressWarnings("unchecked")
@@ -45,7 +44,7 @@ public class ReflectionUtil extends Reflections {
 
     @SuppressWarnings("unchecked")
     private static final Class<Annotation>[] EVICT_CACHE_METHOD_ANNOTATIONS = new Class[]{
-            Evict.class, Evicts.class, EvictMulti.class, EvictMultis.class
+            Evict.class, Evicts.class
     };
 
 
@@ -56,7 +55,7 @@ public class ReflectionUtil extends Reflections {
 
     @SuppressWarnings("unchecked")
     private static final Class<Annotation>[] CACHE_CLASS_ANNOTATIONS = new Class[]{
-            Cacheable.class
+            ArcherCache.class
     };
 
     /**

@@ -1,7 +1,7 @@
 package com.github.attt.archer.util;
 
-import com.github.attt.archer.annotation.Cacheable;
-import com.github.attt.archer.annotation.extra.MapTo;
+import com.github.attt.archer.cache.annotation.ArcherCache;
+import com.github.attt.archer.cache.annotation.CacheMapping;
 import com.github.attt.archer.exception.CacheBeanParsingException;
 import com.github.attt.archer.exception.CacheOperationException;
 import com.github.attt.archer.loader.MultipleLoader;
@@ -42,12 +42,12 @@ public class CacheUtils {
      */
     public static List<AbstractCacheMetadata> resolveMetadata(Method method, Annotation annotation) {
         Class<?> methodClass = method.getDeclaringClass();
-        Cacheable cacheable = ReflectionUtil.getCacheAnnotation(methodClass, Cacheable.class);
-        return resolveMetadata(cacheable, method, annotation);
+        ArcherCache archerCache = ReflectionUtil.getCacheAnnotation(methodClass, ArcherCache.class);
+        return resolveMetadata(archerCache, method, annotation);
     }
 
     /**
-     * Resolve cache annotation to metadata with Service class annotation {@link Cacheable}
+     * Resolve cache annotation to metadata with Service class annotation {@link ArcherCache}
      * <p>
      * Brief:
      * <ul>
@@ -56,34 +56,34 @@ public class CacheUtils {
      *     <li>Create metadata (implements {@link AbstractCacheMetadata})
      * </ul>
      * <p>
-     * About {@link Cacheable} :
+     * About {@link ArcherCache} :
      * <ul>
-     *     <li>Use {@link Cacheable#area()},{@link Cacheable#valueSerializer()},{@link Cacheable#keyGenerator()} as
+     *     <li>Use {@link ArcherCache#region()},{@link ArcherCache#valueSerializer()},{@link ArcherCache#keyGenerator()} as
      *     default value for every method cache of the same service class
-     *     <li>Use {@link Cacheable#prefix()} to prepend prefix string to every cache key of method cache of the same
+     *     <li>Use {@link ArcherCache#prefix()} to prepend prefix string to every cache key of method cache of the same
      *     service class
      * </ul>
      *
-     * @param serviceCacheable
+     * @param archerCache
      * @param method
      * @param annotation
      * @return
      */
     @SuppressWarnings({"rawtypes", "unchecked"})
-    public static List<AbstractCacheMetadata> resolveMetadata(Cacheable serviceCacheable, Method method, Annotation annotation) {
+    public static List<AbstractCacheMetadata> resolveMetadata(ArcherCache archerCache, Method method, Annotation annotation) {
 
         ClassCacheMetadata classCacheMetadata = new ClassCacheMetadata();
         classCacheMetadata.setKeyPrefix(
-                CommonUtils.escapeNullable(serviceCacheable, () -> CommonUtils.isNotEmpty(serviceCacheable.prefix()) ? serviceCacheable.prefix() : serviceCacheable.value(), "")
+                CommonUtils.escapeNullable(archerCache, () -> CommonUtils.isNotEmpty(archerCache.prefix()) ? archerCache.prefix() : archerCache.value(), "")
         );
         classCacheMetadata.setValueSerializer(
-                CommonUtils.escapeNullable(serviceCacheable, () -> serviceCacheable.valueSerializer(), "")
+                CommonUtils.escapeNullable(archerCache, () -> archerCache.valueSerializer(), "")
         );
         classCacheMetadata.setKeyGenerator(
-                CommonUtils.escapeNullable(serviceCacheable, () -> serviceCacheable.keyGenerator(), "")
+                CommonUtils.escapeNullable(archerCache, () -> archerCache.keyGenerator(), "")
         );
         classCacheMetadata.setArea(
-                CommonUtils.escapeNullable(serviceCacheable, () -> serviceCacheable.area(), "")
+                CommonUtils.escapeNullable(archerCache, () -> archerCache.region(), "")
         );
 
 
@@ -117,7 +117,7 @@ public class CacheUtils {
     }
 
     /**
-     * Create loader for 'the elements part' of {@link com.github.attt.archer.annotation.CacheList}
+     * Create loader for 'the elements part' of {@link com.github.attt.archer.cache.annotation.CacheList}
      * <p>
      * The loader is used when missing cache, this mainly:
      * <ul>
@@ -143,8 +143,8 @@ public class CacheUtils {
     }
 
     /**
-     * Create loader for {@link com.github.attt.archer.annotation.Cache} and 'the list part' of
-     * {@link com.github.attt.archer.annotation.CacheList}
+     * Create loader for {@link com.github.attt.archer.cache.annotation.Cache} and 'the list part' of
+     * {@link com.github.attt.archer.cache.annotation.CacheList}
      * <p>
      * Simply invoke method defined in {@link InvocationContext}
      *
@@ -164,16 +164,16 @@ public class CacheUtils {
     }
 
     /**
-     * Create loader for {@link com.github.attt.archer.annotation.CacheMulti}
+     * Create loader for {@link com.github.attt.archer.cache.annotation.Cache} which {@link com.github.attt.archer.cache.annotation.Cache#asOne()} is false
      * <p>
      * Load all data whether all caches are missing or part of caches is missing:
      * <ul>
      *     <li> Squeeze arguments defined in {@link InvocationContext} list
      *     <li> Invoke method defined in {@link InvocationContext} with squeezed arguments
-     *     <li> Map every {@link InvocationContext} to every result with {@link MapTo} (keep the order right)
+     *     <li> Map every {@link InvocationContext} to every result with {@link com.github.attt.archer.cache.annotation.CacheMapping} (keep the order right)
      * </ul>
      * <p>
-     * In multi result cache case, there will happen 'data noise' or data missing (see the comment of {@link MapTo} about 'noise data').
+     * In multi result cache case, there will happen 'data noise' or data missing (see the comment of {@link com.github.attt.archer.cache.annotation.CacheMapping} about 'noise data').
      * To resolve 'data noise' or data missing problem, any cache of any element of {@link InvocationContext} list missing will
      * cause the whole {@link InvocationContext} list data reloading but not just reload the absent ones.
      * <p>
@@ -237,8 +237,12 @@ public class CacheUtils {
                 }
                 Object[] mappedArgs = new Object[indexedMapTo.size()];
                 for (int i1 = 0; i1 < indexedMapToEntries.size(); i1++) {
-                    MapTo mapTo = (MapTo) indexedMapToEntries.get(i1).getValue();
-                    Object arg = new SpringElUtil.SpringELEvaluationContext(mapTo.value()).addVar("result$each", element).getValue();
+                    CacheMapping mapTo = (CacheMapping) indexedMapToEntries.get(i1).getValue();
+                    String expression = "#result$each." + mapTo.toResult();
+                    if (CommonUtils.isEmpty(mapTo.toResult())) {
+                        expression = "#result$each";
+                    }
+                    Object arg = new SpringElUtil.SpringELEvaluationContext(expression).addVar("result$each", element).getValue();
                     mappedArgs[i1] = arg;
                 }
 

@@ -1,9 +1,9 @@
 package com.github.attt.archer.processor.api;
 
 import com.github.attt.archer.CacheManager;
-import com.github.attt.archer.annotation.Cache;
-import com.github.attt.archer.annotation.CacheList;
-import com.github.attt.archer.annotation.CacheMulti;
+import com.github.attt.archer.cache.annotation.Cache;
+import com.github.attt.archer.cache.annotation.CacheList;
+import com.github.attt.archer.cache.annotation.Protection;
 import com.github.attt.archer.cache.internal.ShardingCache;
 import com.github.attt.archer.components.internal.InternalElementKeyGenerator;
 import com.github.attt.archer.components.internal.InternalKeyGenerator;
@@ -124,15 +124,14 @@ public abstract class AbstractProcessor<C extends AbstractCacheOperation<?, V>, 
     /**
      * Get result by invoking loader
      * <p>
-     * If {@link Cache#breakdownProtect()}}
+     * If {@link Protection#breakdownProtect()}
      * is true, only one of concurrent requests will
      * actually load result by invoking loader, other requests
      * will hold on until loading-request is done or timeout
-     * {@link Cache#breakdownProtectTimeout()}
+     * {@link Protection#breakdownProtectTimeout()}
      *
      * @param context
      * @return
-     * @see CacheMulti
      * @see CacheList
      * @see Cache
      */

@@ -1,11 +1,10 @@
 package com.github.attt.archer.util.resolver;
 
-import com.github.attt.archer.annotation.CacheList;
+import com.github.attt.archer.cache.annotation.CacheList;
 import com.github.attt.archer.metadata.ClassCacheMetadata;
 import com.github.attt.archer.metadata.ListCacheMetadata;
 
 import java.lang.reflect.Method;
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 
@@ -26,18 +25,18 @@ public class CacheListResolver implements AnnotationResolver<CacheList, List<Lis
                 annotation.key(),
                 annotation.condition(),
                 chooseValue(classCacheMetadata.getKeyGenerator(), annotation.keyGenerator()),
-                chooseValue(classCacheMetadata.getArea(), annotation.area())
+                chooseValue(classCacheMetadata.getArea(), annotation.region())
         );
 
-        metadata.setElementKey(annotation.elementKey());
-        metadata.setElementKeyGenerator(annotation.elementKeyGenerator());
+        metadata.setElementKey(annotation.element().key());
+        metadata.setElementKeyGenerator(annotation.element().keyGenerator());
         metadata.setInvokeAnyway(annotation.overwrite());
-        metadata.setElementValueSerializer(chooseValue(classCacheMetadata.getValueSerializer(), annotation.elementValueSerializer()));
-        metadata.setExpirationInMillis(annotation.expirationTimeUnit().toMillis(annotation.expiration()));
-        metadata.setBreakdownProtect(annotation.breakdownProtect());
-        metadata.setBreakdownProtectTimeoutInMillis(annotation.breakdownProtectTimeUnit().toMillis(annotation.breakdownProtectTimeout()));
-        metadata.setElementArea(annotation.elementArea());
-        metadata.setElementExpirationInMillis(annotation.elementExpirationTimeUnit().toMillis(annotation.elementExpiration()));
+        metadata.setElementValueSerializer(chooseValue(classCacheMetadata.getValueSerializer(), annotation.element().valueSerializer()));
+        metadata.setExpirationInMillis(annotation.expiration().expirationTimeUnit().toMillis(annotation.expiration().expiration()));
+        metadata.setBreakdownProtect(annotation.protection().breakdownProtect());
+        metadata.setBreakdownProtectTimeoutInMillis(annotation.protection().breakdownProtectTimeUnit().toMillis(annotation.protection().breakdownProtectTimeout()));
+        metadata.setElementArea(annotation.element().region());
+        metadata.setElementExpirationInMillis(annotation.element().expiration().expirationTimeUnit().toMillis(annotation.element().expiration().expiration()));
         return Collections.singletonList(metadata);
     }
 }

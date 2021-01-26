@@ -1,6 +1,5 @@
 package com.github.attt.archer.processor;
 
-import com.github.attt.archer.annotation.CacheList;
 import com.github.attt.archer.cache.api.Cache;
 import com.github.attt.archer.metadata.ListCacheMetadata;
 import com.github.attt.archer.operation.ListCacheOperation;
@@ -21,7 +20,7 @@ import java.util.*;
  * @param <V> cache value type
  * @author atpexgo.wu
  * @see ListCacheOperation
- * @see CacheList
+ * @see com.github.attt.archer.cache.annotation.CacheList
  * @since 1.0
  */
 public class ListProcessor<V> extends AbstractProcessor<ListCacheOperation<V>, Collection<V>> implements ListComponent {

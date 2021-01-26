@@ -7,7 +7,8 @@ import org.slf4j.LoggerFactory;
 
 import java.util.Collection;
 
-import static com.github.attt.archer.constants.Constants.DEFAULT_AREA;
+import static com.github.attt.archer.constants.Constants.DEFAULT_REGION;
+
 
 /**
  * Service cacheable context
@@ -59,7 +60,7 @@ public class CacheContext {
     public static void evict(String key) {
         Collection<AbstractProcessor> processors = cacheManager.getProcessors();
         for (AbstractProcessor processor : processors) {
-            processor.delete(DEFAULT_AREA, key);
+            processor.delete(DEFAULT_REGION, key);
         }
     }
 
@@ -97,7 +98,7 @@ public class CacheContext {
     public static boolean exist(String key) {
         Collection<AbstractProcessor> processors = cacheManager.getProcessors();
         for (AbstractProcessor processor : processors) {
-            boolean exist = processor.exist(DEFAULT_AREA, key);
+            boolean exist = processor.exist(DEFAULT_REGION, key);
             if (exist) {
                 return true;
             }
