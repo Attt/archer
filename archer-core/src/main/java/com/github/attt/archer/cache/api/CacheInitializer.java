@@ -11,27 +11,27 @@ import com.github.attt.archer.roots.Component;
 public interface CacheInitializer extends Component {
 
     /**
-     * Initial {@link Cache} with {@link CacheShard}
+     * 根据缓存（分片）配置 {@link CacheShard}初始化缓存 {@link Cache}
      *
-     * @param shard
-     * @return
-     * @throws Throwable
+     * @param shard 缓存（分片）配置
+     * @return 初始化完成后的缓存实例
+     * @throws Throwable 异常
      */
     Cache initial(CacheShard shard) throws Throwable;
 
     /**
-     * If initializer is enabled
+     * 是否启用本初始化工具
      *
-     * @return true if enabled
+     * @return 是否启用
      */
     default boolean enabled() {
         return true;
     }
 
     /**
-     * Initializing order
+     * 初始化优先级，只执行优先级最高的初始化工具
      *
-     * @return order between {@link Integer#MIN_VALUE} to {@link Integer#MAX_VALUE}
+     * @return 小值优先级（范围：{@link Integer#MIN_VALUE} 到 {@link Integer#MAX_VALUE} ）
      */
     default int order() {
         return -1;

@@ -3,23 +3,25 @@ package com.github.attt.archer.cache.api;
 import java.util.Iterator;
 
 /**
+ * Sharding configure
+ *
  * @author atpexgo.wu
  * @since 1.0
  */
 public interface ShardingConfigure {
 
     /**
-     * Find {@link Cache} with sharding seed
+     * 根据seed查找分片 {@link Cache}
      *
-     * @param seed sharding seed
-     * @return
+     * @param seed 分片seed
+     * @return seed对应的cache实例
      */
     Cache sharding(String seed);
 
     /**
-     * Iterator for all {@link Cache}
+     * 遍历所有分片缓存实例 {@link Cache}
      *
-     * @return
+     * @return 所有分片缓存实例迭代器
      */
     Iterator<Cache> shards();
 }

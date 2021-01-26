@@ -21,7 +21,10 @@ public class ShardingCacheConfigure implements ShardingConfigure {
 
     private static final Logger logger = LoggerFactory.getLogger(ShardingCacheConfigure.class);
 
-    private static final int NODE_NUM = 50;
+    /**
+     * 每个物理节点的虚拟节点数量
+     */
+    private static final int VNODE_NUM = 50;
 
     protected static volatile Boolean initialized = false;
 
@@ -79,7 +82,7 @@ public class ShardingCacheConfigure implements ShardingConfigure {
             try {
                 Cache cache = cacheInitializer.initial(shard);
                 caches.add(cache);
-                for (int j = 0; j < NODE_NUM; j++) {
+                for (int j = 0; j < VNODE_NUM; j++) {
                     shardingNodes.put(ShardingUtil.hash("SHARD-" + i + "NODE-" + j), cache);
                 }
             } catch (Throwable t) {

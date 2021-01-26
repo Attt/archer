@@ -10,6 +10,4 @@ import com.github.attt.archer.roots.Component;
  * @since 1.0
  */
 public interface CacheShard extends Component {
-
-
 }

@@ -51,6 +51,7 @@ public class CacheInitializerDelegate implements CacheInitializer, Component {
         entry.initializer = initializerEntry.getValue();
         entry.next = order + 1;
         if (!entry.initializer.enabled()) {
+            // 初始化工具没有开启，尝试下一个初始化工具
             return delegate(entry.next);
         }
         return entry;

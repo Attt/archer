@@ -12,8 +12,6 @@ public class Constants {
 
     public static final String DEFAULT_KEYS_SUFFIX = "~keys";
 
-    public static final String DEFAULT_KEYS_LOCK_SUFFIX = "~keys_lock";
-
     public static final String DEFAULT_DELIMITER = ":";
 
     public static final String OBJECT_LOAD_METHOD_ARGS_CACHE_PREFIX = "$args$" + DEFAULT_DELIMITER;
