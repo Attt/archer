@@ -179,7 +179,7 @@ public class Archer {
                     Type cacheEntityType = metadata.isMultiple() ? CacheUtils.parseCacheEntityType(declaredMethod) : declaredMethod.getGenericReturnType();
                     if (CacheManager.Config.valueSerialization == Serialization.HESSIAN || CacheManager.Config.valueSerialization == Serialization.JAVA) {
                         if (!Serializable.class.isAssignableFrom(ReflectionUtil.toClass(cacheEntityType))) {
-                            throw new CacheBeanParsingException("To use Hessian or Java serialization, " + cacheEntityType.getTypeName() + " must implement java.io.Serializable");
+                            throw new CacheBeanParsingException("To use Hessian or Java serialization, Plz make sure: 1. " + cacheEntityType.getTypeName() + " must implement java.io.Serializable 2. `asOne` field should be set to false to make @Cache support multi caching.");
                         }
                     }
 
