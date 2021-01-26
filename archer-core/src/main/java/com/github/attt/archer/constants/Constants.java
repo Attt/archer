@@ -8,7 +8,7 @@ package com.github.attt.archer.constants;
  */
 public class Constants {
 
-    public static final String DEFAULT_AREA = "default_area";
+    public static final String DEFAULT_REGION = "r0";
 
     public static final String DEFAULT_KEYS_SUFFIX = "~keys";
 

@@ -1,6 +1,6 @@
 package com.github.attt.archer.util.resolver;
 
-import com.github.attt.archer.annotation.Evict;
+import com.github.attt.archer.cache.annotation.Evict;
 import com.github.attt.archer.metadata.ClassCacheMetadata;
 import com.github.attt.archer.metadata.EvictionMetadata;
 
@@ -19,16 +19,16 @@ public class EvictResolver implements AnnotationResolver<Evict, List<EvictionMet
         List<EvictionMetadata> evictionMetadata = new ArrayList<>();
 
         String[] areas = new String[0];
-        if (annotation.area().length == 0) {
+        if (annotation.regions().length == 0) {
             if (classCacheMetadata.getArea() != null) {
                 areas = new String[]{classCacheMetadata.getArea()};
             }
         } else {
-            areas = annotation.area();
+            areas = annotation.regions();
         }
 
         for (String area : areas) {
-            for (String key : annotation.key()) {
+            for (String key : annotation.keys()) {
                 EvictionMetadata metadata = new EvictionMetadata();
                 resolveCommon(
                         metadata,

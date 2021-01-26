@@ -1,9 +1,8 @@
 package com.github.attt.archer.test.service;
 
-import com.github.attt.archer.annotation.Cache;
-import com.github.attt.archer.annotation.CacheList;
-import com.github.attt.archer.annotation.CacheMulti;
-import com.github.attt.archer.annotation.extra.MapTo;
+import com.github.attt.archer.cache.annotation.Cache;
+import com.github.attt.archer.cache.annotation.CacheList;
+import com.github.attt.archer.cache.annotation.CacheMapping;
 import com.github.attt.archer.test.model.User;
 
 import java.util.ArrayList;
@@ -25,8 +24,8 @@ public class UserService {
         return user;
     }
 
-    @CacheMulti(elementKey = "'user:' + #userIds$each")
-    public List<User> getUsersByIdList(@MapTo("#result$each.id") List<Long> userIds) {
+    @Cache(key = "'user:' + #userIds$each", asOne = false)
+    public List<User> getUsersByIdList(@CacheMapping(toResult = "id") List<Long> userIds) {
         List<User> users = new ArrayList<>();
         for (Long userId : userIds) {
             users.add(getUserById(userId));
@@ -35,7 +34,7 @@ public class UserService {
     }
 
 
-    @CacheList(key = "'user:page:' + #pageId", elementKey = "'user:' + #result$each.id")
+    @CacheList(key = "'user:page:' + #pageId", element = @Cache(key = "'user:' + #result$each.id"))
     public List<User> getPagingUsers(int pageId, int pageSize) {
         List<User> users = new ArrayList<>();
         for (Long userId : Arrays.asList(1L, 2L)) {

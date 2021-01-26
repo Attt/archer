@@ -1,8 +1,6 @@
 package com.github.attt.archer.processor;
 
-import com.github.attt.archer.annotation.CacheMulti;
 import com.github.attt.archer.cache.api.Cache;
-import com.github.attt.archer.exception.CacheOperationException;
 import com.github.attt.archer.exception.FallbackException;
 import com.github.attt.archer.metadata.ObjectCacheMetadata;
 import com.github.attt.archer.operation.ObjectCacheOperation;
@@ -13,8 +11,6 @@ import com.github.attt.archer.stats.event.CacheHitEvent;
 import com.github.attt.archer.stats.event.CacheMissEvent;
 import com.github.attt.archer.stats.event.CachePenetrationProtectedEvent;
 import com.github.attt.archer.util.CommonUtils;
-import com.github.attt.archer.util.ReflectionUtil;
-import com.github.attt.archer.util.SpringElUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -27,8 +23,7 @@ import java.util.*;
  * @param <V> cache value type
  * @author atpexgo.wu
  * @see ObjectCacheOperation
- * @see Cache
- * @see CacheMulti
+ * @see com.github.attt.archer.cache.annotation.Cache
  * @since 1.0
  */
 public class ObjectProcessor<V> extends AbstractProcessor<ObjectCacheOperation<V>, V> implements ObjectComponent {
@@ -141,38 +136,6 @@ public class ObjectProcessor<V> extends AbstractProcessor<ObjectCacheOperation<V
             } else {
                 combinedOrdered.put(resultEntry.getKey(), deserializedValueCache.get(resultEntry.getKey()));
             }
-        }
-
-        // need reorder ?
-        if (!CommonUtils.isEmpty(metadata.getOrderBy())) {
-            LinkedHashMap<InvocationContext, V> reordered = new LinkedHashMap<>(invocationContexts.size());
-            SpringElUtil.SpringELEvaluationContext springELEvaluationContext = SpringElUtil.parse(metadata.getOrderBy());
-            Object[] objects = combinedOrdered.values().toArray();
-            InvocationContext[] contexts = resultEntryMap.keySet().toArray(new InvocationContext[0]);
-            OrderedHolder<V>[] holders = new OrderedHolder[objects.length];
-            for (int i = 0; i < objects.length; i++) {
-                V object = (V) objects[i];
-                InvocationContext invocationContext = contexts[i];
-                Object order;
-                if (object == null && metadata.getOrderBy().contains("#result")) {
-                    order = Long.MAX_VALUE;
-                } else {
-                    order = springELEvaluationContext.setMethodInvocationContext(
-                            invocationContext.getTarget(),
-                            invocationContext.getMethod(),
-                            invocationContext.getArgs(), null)
-                            .addVar("result$each", object).getValue();
-                    if (!ReflectionUtil.isNumber(order.getClass())) {
-                        throw new CacheOperationException("Order result should be number type;");
-                    }
-                }
-                holders[i] = new OrderedHolder<>(invocationContext, object, order);
-            }
-            Arrays.sort(holders);
-            for (OrderedHolder<V> holder : holders) {
-                reordered.put(holder.key, holder.object);
-            }
-            combinedOrdered = reordered;
         }
 
         logger.debug("{} missed/{} hit", missCount, keys.size() - missCount);

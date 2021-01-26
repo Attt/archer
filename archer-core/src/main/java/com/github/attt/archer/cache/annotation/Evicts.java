@@ -1,4 +1,4 @@
-package com.github.attt.archer.annotation;
+package com.github.attt.archer.cache.annotation;
 
 import java.lang.annotation.Documented;
 import java.lang.annotation.Retention;
@@ -8,7 +8,7 @@ import static java.lang.annotation.ElementType.METHOD;
 import static java.lang.annotation.RetentionPolicy.RUNTIME;
 
 /**
- * {@link EvictMulti} container
+ * {@link Evict} container
  *
  * @author atpexgo
  * @since 1.0
@@ -16,7 +16,7 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
 @Documented
 @Retention(RUNTIME)
 @Target(METHOD)
-public @interface EvictMultis {
+public @interface Evicts {
 
-    EvictMulti[] value();
+    Evict[] value();
 }

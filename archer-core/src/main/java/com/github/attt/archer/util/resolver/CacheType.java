@@ -1,6 +1,6 @@
 package com.github.attt.archer.util.resolver;
 
-import com.github.attt.archer.annotation.*;
+import com.github.attt.archer.cache.annotation.*;
 import com.github.attt.archer.exception.CacheOperationException;
 
 import java.lang.annotation.Annotation;
@@ -20,12 +20,6 @@ public enum CacheType {
     CACHE(Cache.class, new CacheResolver()),
 
     /**
-     * @see CacheMulti
-     * @see CacheMultiResolver
-     */
-    CACHE_MULTI(CacheMulti.class, new CacheMultiResolver()),
-
-    /**
      * @see CacheList
      * @see CacheListResolver
      */
@@ -35,13 +29,8 @@ public enum CacheType {
      * @see Evict
      * @see EvictResolver
      */
-    EVICT(Evict.class, new EvictResolver()),
+    EVICT(Evict.class, new EvictResolver());
 
-    /**
-     * @see EvictMulti
-     * @see EvictMultiResolver
-     */
-    EVICT_MULTI(EvictMulti.class, new EvictMultiResolver());
 
     private final Class<? extends Annotation> annotation;
 

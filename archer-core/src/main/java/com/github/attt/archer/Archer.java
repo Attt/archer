@@ -1,9 +1,8 @@
 package com.github.attt.archer;
 
-import com.github.attt.archer.annotation.Cache;
-import com.github.attt.archer.annotation.CacheList;
-import com.github.attt.archer.annotation.CacheMulti;
 import com.github.attt.archer.cache.CacheInitializerDelegate;
+import com.github.attt.archer.cache.annotation.Cache;
+import com.github.attt.archer.cache.annotation.CacheList;
 import com.github.attt.archer.cache.api.CacheInitializer;
 import com.github.attt.archer.cache.api.CacheShard;
 import com.github.attt.archer.cache.internal.ShardingCache;
@@ -162,7 +161,7 @@ public class Archer {
         if (cacheManager.getMethodSignatureToOperationSourceName().containsKey(signature)) {
             return;
         }
-        List<Annotation> annotations = ReflectionUtil.getCacheAnnotations(declaredMethod, Cache.class, CacheMulti.class);
+        List<Annotation> annotations = ReflectionUtil.getCacheAnnotations(declaredMethod, Cache.class);
         for (Annotation annotation : annotations) {
             if (annotation != null) {
                 List<AbstractCacheMetadata> metadataList = CacheUtils.resolveMetadata(declaredMethod, annotation);
@@ -180,7 +179,7 @@ public class Archer {
                     Type cacheEntityType = metadata.isMultiple() ? CacheUtils.parseCacheEntityType(declaredMethod) : declaredMethod.getGenericReturnType();
                     if (CacheManager.Config.valueSerialization == Serialization.HESSIAN || CacheManager.Config.valueSerialization == Serialization.JAVA) {
                         if (!Serializable.class.isAssignableFrom(ReflectionUtil.toClass(cacheEntityType))) {
-                            throw new CacheBeanParsingException("To use Hessian or Java serialization, " + cacheEntityType.getTypeName() + " must implement java.io.Serializable");
+                            throw new CacheBeanParsingException("To use Hessian or Java serialization, Plz make sure: 1. " + cacheEntityType.getTypeName() + " must implement java.io.Serializable 2. `asOne` field should be set to false to make @Cache support multi caching.");
                         }
                     }
 

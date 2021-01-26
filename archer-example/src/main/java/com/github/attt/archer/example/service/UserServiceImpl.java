@@ -1,6 +1,6 @@
 package com.github.attt.archer.example.service;
 
-import com.github.attt.archer.annotation.Cacheable;
+import com.github.attt.archer.cache.annotation.Cacheable;
 import com.github.attt.archer.example.model.User;
 import com.github.attt.archer.example.repository.UserRepository;
 import com.github.attt.archer.invocation.CacheContext;

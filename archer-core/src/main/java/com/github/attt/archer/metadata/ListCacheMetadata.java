@@ -1,6 +1,6 @@
 package com.github.attt.archer.metadata;
 
-import com.github.attt.archer.annotation.CacheList;
+import com.github.attt.archer.cache.annotation.CacheList;
 
 /**
  * {@link CacheList} cache metadata

@@ -1,6 +1,6 @@
 package com.github.attt.archer.util.resolver;
 
-import com.github.attt.archer.annotation.Cache;
+import com.github.attt.archer.cache.annotation.Cache;
 import com.github.attt.archer.metadata.ClassCacheMetadata;
 import com.github.attt.archer.metadata.ObjectCacheMetadata;
 
@@ -25,14 +25,15 @@ public class CacheResolver implements AnnotationResolver<Cache, List<ObjectCache
                 annotation.key(),
                 annotation.condition(),
                 chooseValue(classCacheMetadata.getKeyGenerator(), annotation.keyGenerator()),
-                chooseValue(classCacheMetadata.getArea(), annotation.area())
+                chooseValue(classCacheMetadata.getArea(), annotation.region())
         );
 
         metadata.setInvokeAnyway(annotation.overwrite());
-        metadata.setExpirationInMillis(annotation.expirationTimeUnit().toMillis(annotation.expiration()));
-        metadata.setBreakdownProtect(annotation.breakdownProtect());
-        metadata.setBreakdownProtectTimeoutInMillis(annotation.breakdownProtectTimeUnit().toMillis(annotation.breakdownProtectTimeout()));
+        metadata.setExpirationInMillis(annotation.expiration().expirationTimeUnit().toMillis(annotation.expiration().expiration()));
+        metadata.setBreakdownProtect(annotation.protection().breakdownProtect());
+        metadata.setBreakdownProtectTimeoutInMillis(annotation.protection().breakdownProtectTimeUnit().toMillis(annotation.protection().breakdownProtectTimeout()));
         metadata.setValueSerializer(chooseValue(classCacheMetadata.getValueSerializer(), annotation.valueSerializer()));
+        metadata.setMultiple(!annotation.asOne());
 
         return Collections.singletonList(metadata);
     }
