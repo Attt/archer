@@ -11,6 +11,11 @@ import static com.github.attt.archer.constants.Constants.DEFAULT_KEYS_SUFFIX;
 /**
  * Cache
  *
+ * 定义了缓存的操作
+ * 可以通过该接口支持不同的缓存中间件或者缓存实现。
+ * 其中显示存在于操作方法参数中的{@link CacheEventCollector}是用来统一收集缓存行为，
+ * 用于计算和统计缓存用量和指标。
+ *
  * @author atpexgo.wu
  * @since 1.0
  */

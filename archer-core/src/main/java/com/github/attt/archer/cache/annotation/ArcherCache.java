@@ -21,6 +21,9 @@ public @interface ArcherCache {
      * 即使缓存key一样也可以以多个缓存副本存在，这些缓存副本之间可以有
      * 不同的缓存状态
      *
+     * 多个缓存可以声明同一个缓存region，相当于分组，快进到evict可以一次性
+     * 淘汰多个缓存
+     *
      * @return 默认值："r0"
      */
     String region() default DEFAULT_REGION;

@@ -13,6 +13,11 @@ import java.util.TreeMap;
 /**
  * Internal cache operation initialization initializer delegate
  *
+ * 内部缓存实现的缓存初始化工具的代理器
+ * archer cache提供了两个默认缓存实现（除去hashmap这种），分别是redis和caffeine，
+ * 同时引入这两种实现时，根据优先级（priority）先使用redis。
+ *
+ *
  * @author atpexgo.wu
  * @since 1.0
  */
@@ -51,7 +56,7 @@ public class CacheInitializerDelegate implements CacheInitializer, Component {
         entry.initializer = initializerEntry.getValue();
         entry.next = order + 1;
         if (!entry.initializer.enabled()) {
-            // 初始化工具没有开启，尝试下一个初始化工具
+            // 初始化工具没有启用，尝试下一个初始化工具
             return delegate(entry.next);
         }
         return entry;

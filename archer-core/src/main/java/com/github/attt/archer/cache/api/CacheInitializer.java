@@ -5,6 +5,8 @@ import com.github.attt.archer.roots.Component;
 /**
  * Cache operation initialization processor
  *
+ * 通过实现这个接口来定义初始化缓存的行为
+ *
  * @author atpexgo.wu
  * @since 1.0
  */
