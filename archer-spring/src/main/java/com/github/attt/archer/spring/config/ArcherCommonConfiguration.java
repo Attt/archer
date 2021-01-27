@@ -46,6 +46,7 @@ public class ArcherCommonConfiguration {
     @Conditional(ShardInfoBeanExistCondition.class)
     @Role(BeanDefinition.ROLE_INFRASTRUCTURE)
     public SpringShardingCacheConfigure shardInfoConfiguration(List<CacheShard> shardList, List<CacheInitializer> cacheInitializers) {
+        // todo
         CacheInitializer initializer = cacheInitializers.get(0);
         if (cacheInitializers.size() > 1) {
             for (CacheInitializer cacheInitializer : cacheInitializers) {

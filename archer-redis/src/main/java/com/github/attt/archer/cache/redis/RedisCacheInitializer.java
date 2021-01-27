@@ -40,7 +40,7 @@ public final class RedisCacheInitializer implements CacheInitializer {
     }
 
     @Override
-    public int order() {
+    public int priority() {
         return 0;
     }
 }

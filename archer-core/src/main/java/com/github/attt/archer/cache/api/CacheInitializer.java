@@ -35,7 +35,7 @@ public interface CacheInitializer extends Component {
      *
      * @return 小值优先级（范围：{@link Integer#MIN_VALUE} 到 {@link Integer#MAX_VALUE} ）
      */
-    default int order() {
+    default int priority() {
         return -1;
     }
 }

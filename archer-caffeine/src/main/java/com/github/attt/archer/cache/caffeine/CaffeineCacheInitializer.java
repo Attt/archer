@@ -44,7 +44,7 @@ public final class CaffeineCacheInitializer implements CacheInitializer {
     }
 
     @Override
-    public int order() {
+    public int priority() {
         return 1;
     }
 }

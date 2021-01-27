@@ -65,7 +65,7 @@ public class Archer {
 
     private final CacheManager cacheManager = new CacheManager();
 
-    private CacheInitializer cacheInitializer;
+    private CacheInitializerDelegate cacheInitializerDelegate = new CacheInitializerDelegate();
 
     private final List<CacheShard> cacheShards = Collections.synchronizedList(new ArrayList<>());
 
@@ -97,8 +97,8 @@ public class Archer {
         return this;
     }
 
-    public Archer setCacheInitializer(CacheInitializer initializer) {
-        this.cacheInitializer = initializer;
+    public Archer addCacheInitializer(CacheInitializer initializer) {
+        this.cacheInitializerDelegate.registerInitializer(initializer);
         return this;
     }
 
@@ -268,10 +268,7 @@ public class Archer {
     }
 
     private void sharding() {
-        if (cacheInitializer == null) {
-            cacheInitializer = new CacheInitializerDelegate();
-        }
-        ShardingCacheConfigure shardingCacheConfigure = new ShardingCacheConfigure(cacheInitializer, cacheShards);
+        ShardingCacheConfigure shardingCacheConfigure = new ShardingCacheConfigure(cacheInitializerDelegate, cacheShards);
         shardingCacheConfigure.init();
         ShardingCache shardingCache = new ShardingCache(shardingCacheConfigure);
         cacheManager.setShardingCache(shardingCache);

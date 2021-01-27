@@ -9,7 +9,7 @@ import org.springframework.aop.support.AbstractBeanFactoryPointcutAdvisor;
  */
 public class CacheAdvisor extends AbstractBeanFactoryPointcutAdvisor {
 
-    public static final String CACHE_ADVISOR_BEAN_NAME = "serviceCache.internalCacheAdvisor";
+    public static final String CACHE_ADVISOR_BEAN_NAME = "archer.internalCacheAdvisor";
 
     private String[] basePackages;
 

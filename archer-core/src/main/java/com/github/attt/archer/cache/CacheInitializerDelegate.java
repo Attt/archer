@@ -46,15 +46,15 @@ public class CacheInitializerDelegate implements CacheInitializer, Component {
         throw new CacheBeanParsingException("Can't resolve cache shard, present instance is " + shard.getClass().getName());
     }
 
-    private InternalInitializerEntry delegate(int order) {
-        NavigableMap<Integer, CacheInitializer> map = cacheInitializerTree.tailMap(order, true);
+    private InternalInitializerEntry delegate(int priority) {
+        NavigableMap<Integer, CacheInitializer> map = cacheInitializerTree.tailMap(priority, true);
         Map.Entry<Integer, CacheInitializer> initializerEntry = map.firstEntry();
         if (initializerEntry == null) {
             return null;
         }
         InternalInitializerEntry entry = new InternalInitializerEntry();
         entry.initializer = initializerEntry.getValue();
-        entry.next = order + 1;
+        entry.next = priority + 1;
         if (!entry.initializer.enabled()) {
             // 初始化工具没有启用，尝试下一个初始化工具
             return delegate(entry.next);
@@ -75,15 +75,22 @@ public class CacheInitializerDelegate implements CacheInitializer, Component {
         }
     }
 
-    private void registerInitializer(Class<? extends CacheInitializer> cacheInitializerType) {
+    public void registerInitializer(Class<? extends CacheInitializer> cacheInitializerType) {
         if (cacheInitializerType == null) {
             return;
         }
         try {
             CacheInitializer initializer = cacheInitializerType.newInstance();
-            cacheInitializerTree.put(initializer.order(), initializer);
+            cacheInitializerTree.put(initializer.priority(), initializer);
         } catch (Throwable ignored) {
         }
 
+    }
+
+    public void registerInitializer(CacheInitializer cacheInitializer) {
+        if (cacheInitializer == null) {
+            return;
+        }
+        cacheInitializerTree.put(cacheInitializer.priority(), cacheInitializer);
     }
 }
