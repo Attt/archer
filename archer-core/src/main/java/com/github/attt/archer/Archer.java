@@ -343,7 +343,7 @@ public class Archer {
                     Method create = enhancerClass.getDeclaredMethod("create");
                     return (T) create.invoke(enhancer);
                 } catch (InstantiationException | IllegalAccessException | ClassNotFoundException | NoSuchMethodException | InvocationTargetException e) {
-                    logger.error("To user class not implement interface, you should involve cglib dependency.");
+                    logger.error("To use class not implement interface, you should involve cglib dependency.");
                     throw new CacheOperationException(e);
                 }
             }

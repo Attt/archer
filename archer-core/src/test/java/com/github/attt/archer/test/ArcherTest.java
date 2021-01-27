@@ -46,7 +46,7 @@ public class ArcherTest {
     @Test
     public void testCacheMulti() {
         Archer.enableMetrics();
-        Archer.serialization(Serialization.FAST_JSON);
+        Archer.serialization(Serialization.KRYO);
         UserService userService = Archer.create(ArcherTest.class.getPackage().getName())
 //                .addKeyGenerator("customKeyGenerator", new CustomKeyGenerator())
 //                .addValueSerializer("customValueSerializer", new CustomValueSerializer())

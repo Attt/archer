@@ -41,6 +41,6 @@ public final class RedisCacheInitializer implements CacheInitializer {
 
     @Override
     public int priority() {
-        return 0;
+        return Integer.MAX_VALUE - 1;
     }
 }

@@ -12,11 +12,10 @@ import java.util.TreeMap;
 
 /**
  * Internal cache operation initialization initializer delegate
- *
+ * <p>
  * 内部缓存实现的缓存初始化工具的代理器
  * archer cache提供了两个默认缓存实现（除去hashmap这种），分别是redis和caffeine，
  * 同时引入这两种实现时，根据优先级（priority）先使用redis。
- *
  *
  * @author atpexgo.wu
  * @since 1.0
@@ -43,7 +42,7 @@ public class CacheInitializerDelegate implements CacheInitializer, Component {
                 return cache;
             }
         }
-        throw new CacheBeanParsingException("Can't resolve cache shard, present instance is " + shard.getClass().getName());
+        throw new CacheBeanParsingException("Can't resolve cache shard config, present instance is " + shard.getClass().getName());
     }
 
     private InternalInitializerEntry delegate(int priority) {
@@ -81,7 +80,10 @@ public class CacheInitializerDelegate implements CacheInitializer, Component {
         }
         try {
             CacheInitializer initializer = cacheInitializerType.newInstance();
-            cacheInitializerTree.put(initializer.priority(), initializer);
+            if (initializer.enabled()) {
+                // double check before initializer added to delegate tree map
+                cacheInitializerTree.put(initializer.priority(), initializer);
+            }
         } catch (Throwable ignored) {
         }
 
@@ -91,6 +93,9 @@ public class CacheInitializerDelegate implements CacheInitializer, Component {
         if (cacheInitializer == null) {
             return;
         }
-        cacheInitializerTree.put(cacheInitializer.priority(), cacheInitializer);
+        if (cacheInitializer.enabled()) {
+            // double check before initializer added to delegate tree map
+            cacheInitializerTree.put(cacheInitializer.priority(), cacheInitializer);
+        }
     }
 }
