@@ -1,10 +1,10 @@
 package com.github.attt.archer.spring.config;
 
 
-import com.github.attt.archer.cache.CacheInitializerDelegate;
-import com.github.attt.archer.cache.api.CacheInitializer;
-import com.github.attt.archer.cache.api.CacheShard;
-import com.github.attt.archer.cache.internal.ShardingCache;
+import com.github.attt.archer.cache.InternalCacheFactory;
+import com.github.attt.archer.cache.CacheFactory;
+import com.github.attt.archer.cache.CacheConfig;
+import com.github.attt.archer.cache.ShardingCache;
 import org.springframework.beans.factory.config.BeanDefinition;
 import org.springframework.context.annotation.*;
 import org.springframework.core.type.AnnotatedTypeMetadata;
@@ -43,15 +43,15 @@ public class ArcherCommonConfiguration {
     }
 
     @Bean
-    @Conditional(ShardInfoBeanExistCondition.class)
+    @Conditional(CacheConfigBeanExistCondition.class)
     @Role(BeanDefinition.ROLE_INFRASTRUCTURE)
-    public SpringShardingCacheConfigure shardInfoConfiguration(List<CacheShard> shardList, List<CacheInitializer> cacheInitializers) {
+    public SpringShardingCacheConfigure shardInfoConfiguration(List<CacheConfig> shardList, List<CacheFactory> cacheFactories) {
         // todo
-        CacheInitializer initializer = cacheInitializers.get(0);
-        if (cacheInitializers.size() > 1) {
-            for (CacheInitializer cacheInitializer : cacheInitializers) {
-                if (!(cacheInitializer instanceof CacheInitializerDelegate)) {
-                    initializer = cacheInitializer;
+        CacheFactory initializer = cacheFactories.get(0);
+        if (cacheFactories.size() > 1) {
+            for (CacheFactory cacheFactory : cacheFactories) {
+                if (!(cacheFactory instanceof InternalCacheFactory)) {
+                    initializer = cacheFactory;
                     break;
                 }
             }
@@ -60,14 +60,14 @@ public class ArcherCommonConfiguration {
     }
 
     @Bean
-    @Conditional(ShardInfoBeanAbsentCondition.class)
+    @Conditional(CacheConfigBeanAbsentCondition.class)
     @Role(BeanDefinition.ROLE_INFRASTRUCTURE)
-    public SpringShardingCacheConfigure shardInfoConfiguration0(List<CacheInitializer> cacheInitializers) {
-        CacheInitializer initializer = cacheInitializers.get(0);
-        if (cacheInitializers.size() > 1) {
-            for (CacheInitializer cacheInitializer : cacheInitializers) {
-                if (!(cacheInitializer instanceof CacheInitializerDelegate)) {
-                    initializer = cacheInitializer;
+    public SpringShardingCacheConfigure shardInfoConfiguration0(List<CacheFactory> cacheFactories) {
+        CacheFactory initializer = cacheFactories.get(0);
+        if (cacheFactories.size() > 1) {
+            for (CacheFactory cacheFactory : cacheFactories) {
+                if (!(cacheFactory instanceof InternalCacheFactory)) {
+                    initializer = cacheFactory;
                     break;
                 }
             }
@@ -78,25 +78,25 @@ public class ArcherCommonConfiguration {
 
     @Bean
     @Role(BeanDefinition.ROLE_INFRASTRUCTURE)
-    public CacheInitializer cacheInitializer() {
-        return new CacheInitializerDelegate();
+    public CacheFactory cacheInitializer() {
+        return new InternalCacheFactory();
     }
 
-    public static class ShardInfoBeanAbsentCondition implements Condition {
+    public static class CacheConfigBeanAbsentCondition implements Condition {
 
         @Override
         public boolean matches(ConditionContext conditionContext, AnnotatedTypeMetadata annotatedTypeMetadata) {
-            Map<String, CacheShard> shards = conditionContext.getBeanFactory().getBeansOfType(CacheShard.class);
-            return shards.size() == 0;
+            Map<String, CacheConfig> configMap = conditionContext.getBeanFactory().getBeansOfType(CacheConfig.class);
+            return configMap.size() == 0;
         }
     }
 
-    public static class ShardInfoBeanExistCondition implements Condition {
+    public static class CacheConfigBeanExistCondition implements Condition {
 
         @Override
         public boolean matches(ConditionContext conditionContext, AnnotatedTypeMetadata annotatedTypeMetadata) {
-            Map<String, CacheShard> shards = conditionContext.getBeanFactory().getBeansOfType(CacheShard.class);
-            return shards.size() != 0;
+            Map<String, CacheConfig> configMap = conditionContext.getBeanFactory().getBeansOfType(CacheConfig.class);
+            return configMap.size() != 0;
         }
     }
 }

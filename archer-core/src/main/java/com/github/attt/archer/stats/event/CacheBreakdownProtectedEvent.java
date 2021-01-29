@@ -1,8 +1,8 @@
 package com.github.attt.archer.stats.event;
 
-import com.github.attt.archer.cache.annotation.Protection;
-import com.github.attt.archer.metadata.CacheMetadata;
-import com.github.attt.archer.processor.api.AbstractProcessor;
+import com.github.attt.archer.annotation.Protection;
+import com.github.attt.archer.annotation.metadata.CacheMetadata;
+import com.github.attt.archer.invoker.AbstractInvoker;
 import com.github.attt.archer.stats.api.CacheEvent;
 import com.github.attt.archer.stats.api.CacheEventCollector;
 
@@ -17,7 +17,7 @@ import java.util.function.Supplier;
  *
  * @author atpexgo.wu
  * @see CacheMetadata#breakdownProtect
- * @see AbstractProcessor#doSynchronizedLoadAndPut(String, long, Supplier, Consumer, Supplier, CacheEventCollector)
+ * @see AbstractInvoker#doSynchronizedLoadAndPut(String, long, Supplier, Consumer, Supplier, CacheEventCollector)
  * @since 1.0
  */
 public class CacheBreakdownProtectedEvent implements CacheEvent {

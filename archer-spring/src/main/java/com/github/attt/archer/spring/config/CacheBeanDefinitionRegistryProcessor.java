@@ -2,22 +2,22 @@ package com.github.attt.archer.spring.config;
 
 
 import com.github.attt.archer.CacheManager;
-import com.github.attt.archer.cache.internal.ShardingCache;
+import com.github.attt.archer.cache.ShardingCache;
 import com.github.attt.archer.components.api.KeyGenerator;
 import com.github.attt.archer.components.api.Serializer;
 import com.github.attt.archer.components.internal.InternalObjectValueSerializer;
 import com.github.attt.archer.constants.Serialization;
 import com.github.attt.archer.exception.CacheBeanParsingException;
-import com.github.attt.archer.invocation.InvocationInterceptor;
+import com.github.attt.archer.interceptor.InvocationInterceptor;
 import com.github.attt.archer.loader.SingleLoader;
-import com.github.attt.archer.metadata.EvictionMetadata;
-import com.github.attt.archer.metadata.ListCacheMetadata;
-import com.github.attt.archer.metadata.ObjectCacheMetadata;
-import com.github.attt.archer.metadata.api.AbstractCacheMetadata;
-import com.github.attt.archer.operation.EvictionOperation;
-import com.github.attt.archer.operation.ListCacheOperation;
-import com.github.attt.archer.operation.ObjectCacheOperation;
-import com.github.attt.archer.operation.api.AbstractCacheOperation;
+import com.github.attt.archer.annotation.metadata.EvictionMetadata;
+import com.github.attt.archer.annotation.metadata.ListCacheMetadata;
+import com.github.attt.archer.annotation.metadata.ObjectCacheMetadata;
+import com.github.attt.archer.annotation.metadata.AbstractCacheMetadata;
+import com.github.attt.archer.annotation.config.EvictionConfig;
+import com.github.attt.archer.annotation.config.ListCacheConfig;
+import com.github.attt.archer.annotation.config.ObjectCacheConfig;
+import com.github.attt.archer.annotation.config.AbstractCacheConfig;
 import com.github.attt.archer.stats.api.CacheEvent;
 import com.github.attt.archer.stats.api.listener.CacheStatsListener;
 import com.github.attt.archer.stats.collector.NamedCacheEventCollector;
@@ -164,7 +164,7 @@ public class CacheBeanDefinitionRegistryProcessor implements BeanDefinitionRegis
             }
 
             // register cache operation source bean definition
-            AbstractBeanDefinition cacheOperationDefinition = BeanDefinitionBuilder.genericBeanDefinition(ObjectCacheOperation.class)
+            AbstractBeanDefinition cacheOperationDefinition = BeanDefinitionBuilder.genericBeanDefinition(ObjectCacheConfig.class)
                     .addPropertyValue("metadata", metadata)
                     .addPropertyValue("loader", metadata.isMultiple() ? null : CacheUtils.resolveSingleLoader(method))
                     .addPropertyValue("multipleLoader", metadata.isMultiple() ? CacheUtils.resolveMultiLoader(method) : null)
@@ -214,7 +214,7 @@ public class CacheBeanDefinitionRegistryProcessor implements BeanDefinitionRegis
             SingleLoader<?> loader = CacheUtils.createListableCacheLoader();
 
             // operation source class
-            BeanDefinitionBuilder cacheOperationDefinitionBuilder = BeanDefinitionBuilder.genericBeanDefinition(ListCacheOperation.class);
+            BeanDefinitionBuilder cacheOperationDefinitionBuilder = BeanDefinitionBuilder.genericBeanDefinition(ListCacheConfig.class);
 
             // value serializer
             final String userElementValueSerializer = metadata.getElementValueSerializer();
@@ -253,7 +253,7 @@ public class CacheBeanDefinitionRegistryProcessor implements BeanDefinitionRegis
                 EvictionMetadata metadata = (EvictionMetadata) abstractMetadata;
 
                 // register cache OperationSource bean definition
-                AbstractBeanDefinition evictionOperationDefinition = BeanDefinitionBuilder.genericBeanDefinition(EvictionOperation.class)
+                AbstractBeanDefinition evictionOperationDefinition = BeanDefinitionBuilder.genericBeanDefinition(EvictionConfig.class)
                         .addPropertyValue("metadata", metadata)
                         .addPropertyValue("cacheEventCollector", new NamedCacheEventCollector(metadata.getMethodSignature()))
                         .getBeanDefinition();
@@ -294,8 +294,8 @@ public class CacheBeanDefinitionRegistryProcessor implements BeanDefinitionRegis
         cacheManager.setShardingCache(shardingCache);
 
         // cache operations
-        Map<String, AbstractCacheOperation> cacheOperationMap = beanFactory.getBeansOfType(AbstractCacheOperation.class);
-        Map<String, EvictionOperation> evictionOperationMap = beanFactory.getBeansOfType(EvictionOperation.class);
+        Map<String, AbstractCacheConfig> cacheOperationMap = beanFactory.getBeansOfType(AbstractCacheConfig.class);
+        Map<String, EvictionConfig> evictionOperationMap = beanFactory.getBeansOfType(EvictionConfig.class);
 
         // register cache stats listeners
         if (CacheManager.Config.metricsEnabled) {
@@ -303,13 +303,13 @@ public class CacheBeanDefinitionRegistryProcessor implements BeanDefinitionRegis
             Map<String, CacheStatsListener> statsListenerMap = beanFactory.getBeansOfType(CacheStatsListener.class);
             cacheManager.setStatsListenerMap(statsListenerMap);
 
-            for (AbstractCacheOperation cacheOperation : cacheOperationMap.values()) {
+            for (AbstractCacheConfig cacheOperation : cacheOperationMap.values()) {
                 for (CacheStatsListener<CacheEvent> statsListener : statsListenerMap.values()) {
                     cacheOperation.getCacheEventCollector().register(statsListener);
                 }
             }
 
-            for (EvictionOperation evictionOperation : evictionOperationMap.values()) {
+            for (EvictionConfig evictionOperation : evictionOperationMap.values()) {
                 for (CacheStatsListener<CacheEvent> statsListener : statsListenerMap.values()) {
                     evictionOperation.getCacheEventCollector().register(statsListener);
                 }

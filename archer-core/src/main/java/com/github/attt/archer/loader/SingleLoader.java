@@ -1,7 +1,7 @@
 package com.github.attt.archer.loader;
 
 
-import com.github.attt.archer.processor.context.InvocationContext;
+import com.github.attt.archer.invoker.context.InvocationContext;
 
 /**
  * Loader

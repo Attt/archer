@@ -1,6 +1,6 @@
 package com.github.attt.archer.cache.redis;
 
-import com.github.attt.archer.cache.api.CacheShard;
+import com.github.attt.archer.cache.CacheConfig;
 
 /**
  * Redis shard
@@ -8,7 +8,7 @@ import com.github.attt.archer.cache.api.CacheShard;
  * @author atpexgo.wu
  * @since 1.0
  */
-public class RedisShard implements CacheShard {
+public class RedisShard implements CacheConfig {
 
     private boolean ssl = false;
 

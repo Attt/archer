@@ -1,6 +1,6 @@
 package com.github.attt.archer.cache.redis.test;
 
-import com.github.attt.archer.cache.api.Cache;
+import com.github.attt.archer.cache.Cache;
 import com.github.attt.archer.cache.redis.RedisCache;
 import com.github.attt.archer.cache.redis.RedisShard;
 import com.github.attt.archer.components.internal.InternalKeySerializer;

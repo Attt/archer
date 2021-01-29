@@ -1,6 +1,6 @@
 package com.github.attt.archer.components.api;
 
-import com.github.attt.archer.metadata.api.AbstractCacheMetadata;
+import com.github.attt.archer.annotation.metadata.AbstractCacheMetadata;
 
 import java.lang.reflect.Method;
 

@@ -1,6 +1,8 @@
 package com.github.attt.archer.util.resolver;
 
-import com.github.attt.archer.cache.annotation.*;
+import com.github.attt.archer.annotation.Cache;
+import com.github.attt.archer.annotation.CacheList;
+import com.github.attt.archer.annotation.CacheEvict;
 import com.github.attt.archer.exception.CacheOperationException;
 
 import java.lang.annotation.Annotation;
@@ -26,10 +28,10 @@ public enum CacheType {
     CACHE_LIST(CacheList.class, new CacheListResolver()),
 
     /**
-     * @see Evict
+     * @see CacheEvict
      * @see EvictResolver
      */
-    EVICT(Evict.class, new EvictResolver());
+    EVICT(CacheEvict.class, new EvictResolver());
 
 
     private final Class<? extends Annotation> annotation;

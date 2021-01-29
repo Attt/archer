@@ -1,14 +1,16 @@
 package com.github.attt.archer.util;
 
-import com.github.attt.archer.cache.annotation.ArcherCache;
-import com.github.attt.archer.cache.annotation.CacheMapping;
+import com.github.attt.archer.annotation.Cache;
+import com.github.attt.archer.annotation.CacheList;
+import com.github.attt.archer.annotation.ArcherCache;
+import com.github.attt.archer.annotation.CacheMapping;
 import com.github.attt.archer.exception.CacheBeanParsingException;
 import com.github.attt.archer.exception.CacheOperationException;
 import com.github.attt.archer.loader.MultipleLoader;
 import com.github.attt.archer.loader.SingleLoader;
-import com.github.attt.archer.metadata.ClassCacheMetadata;
-import com.github.attt.archer.metadata.api.AbstractCacheMetadata;
-import com.github.attt.archer.processor.context.InvocationContext;
+import com.github.attt.archer.annotation.metadata.ClassCacheMetadata;
+import com.github.attt.archer.annotation.metadata.AbstractCacheMetadata;
+import com.github.attt.archer.invoker.context.InvocationContext;
 import com.github.attt.archer.util.resolver.AnnotationResolver;
 import com.github.attt.archer.util.resolver.CacheType;
 import org.slf4j.Logger;
@@ -117,13 +119,13 @@ public class CacheUtils {
     }
 
     /**
-     * Create loader for 'the elements part' of {@link com.github.attt.archer.cache.annotation.CacheList}
+     * Create loader for 'the elements part' of {@link CacheList}
      * <p>
      * The loader is used when missing cache, this mainly:
      * <ul>
      *     <li> Invoke method defined in {@link InvocationContext}
      *     <li> Reform result to {@link List} type whether the original method return type
-     *     is {@link List} or {@link Set} or array. (In {@link com.github.attt.archer.invocation.InvocationInterceptor}
+     *     is {@link List} or {@link Set} or array. (In {@link com.github.attt.archer.interceptor.InvocationInterceptor}
      *     interception procedure, the result of this loader and of cache hitting will be
      *     treated as {@link List} consistently.)
      * </ul>
@@ -143,8 +145,8 @@ public class CacheUtils {
     }
 
     /**
-     * Create loader for {@link com.github.attt.archer.cache.annotation.Cache} and 'the list part' of
-     * {@link com.github.attt.archer.cache.annotation.CacheList}
+     * Create loader for {@link Cache} and 'the list part' of
+     * {@link CacheList}
      * <p>
      * Simply invoke method defined in {@link InvocationContext}
      *
@@ -164,16 +166,16 @@ public class CacheUtils {
     }
 
     /**
-     * Create loader for {@link com.github.attt.archer.cache.annotation.Cache} which {@link com.github.attt.archer.cache.annotation.Cache#asOne()} is false
+     * Create loader for {@link Cache} which {@link Cache#asOne()} is false
      * <p>
      * Load all data whether all caches are missing or part of caches is missing:
      * <ul>
      *     <li> Squeeze arguments defined in {@link InvocationContext} list
      *     <li> Invoke method defined in {@link InvocationContext} with squeezed arguments
-     *     <li> Map every {@link InvocationContext} to every result with {@link com.github.attt.archer.cache.annotation.CacheMapping} (keep the order right)
+     *     <li> Map every {@link InvocationContext} to every result with {@link CacheMapping} (keep the order right)
      * </ul>
      * <p>
-     * In multi result cache case, there will happen 'data noise' or data missing (see the comment of {@link com.github.attt.archer.cache.annotation.CacheMapping} about 'noise data').
+     * In multi result cache case, there will happen 'data noise' or data missing (see the comment of {@link CacheMapping} about 'noise data').
      * To resolve 'data noise' or data missing problem, any cache of any element of {@link InvocationContext} list missing will
      * cause the whole {@link InvocationContext} list data reloading but not just reload the absent ones.
      * <p>
@@ -210,10 +212,10 @@ public class CacheUtils {
                 return map;
             }
 
-            // check if @MapTo is declared and then resolve it
+            // check if @CacheMapping is declared and then resolve it
             Map<Integer, Annotation> indexedMapTo = ReflectionUtil.getIndexedMethodParameterCacheAnnotations(method);
             if (CommonUtils.isEmpty(indexedMapTo)) {
-                throw new CacheOperationException("The parameter of method declaring @CacheMulti should declare @MapTo.");
+                throw new CacheOperationException("The parameter of method declaring @Cache(asOne=false) should declare @CacheMapping.");
             }
 
             // gather all arguments declaring @MapTo to MappedArguments, and map it to context

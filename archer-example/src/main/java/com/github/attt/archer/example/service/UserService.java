@@ -1,6 +1,9 @@
 package com.github.attt.archer.example.service;
 
 
+import com.github.attt.archer.annotation.Cache;
+import com.github.attt.archer.annotation.CacheList;
+import com.github.attt.archer.annotation.CacheEvict;
 import com.github.attt.archer.cache.annotation.*;
 import com.github.attt.archer.cache.annotation.extra.MapTo;
 import com.github.attt.archer.example.model.User;
@@ -95,7 +98,7 @@ public interface UserService {
      *
      * @param user
      */
-    @Evict(key = "#user.id")
+    @CacheEvict(key = "#user.id")
     void addUser(User user);
 
 
@@ -110,19 +113,19 @@ public interface UserService {
     /**
      * 淘汰整个缓存区域
      */
-    @Evict(all = true)
+    @CacheEvict(all = true)
     void deleteAllUser();
 
     /**
      * 淘汰整个缓存区域, 指定area
      */
-    @Evict(all = true, area = "custom")
+    @CacheEvict(all = true, area = "custom")
     void deleteAllCustomAreaUser();
 
     /**
      * 淘汰整个缓存区域, 所有area
      */
-    @Evict(all = true, area = {"custom", DEFAULT_AREA})
+    @CacheEvict(all = true, area = {"custom", DEFAULT_AREA})
     void deleteAllAreaUser();
 
     /**

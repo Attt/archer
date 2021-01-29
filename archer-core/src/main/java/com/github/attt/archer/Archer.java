@@ -1,26 +1,25 @@
 package com.github.attt.archer;
 
-import com.github.attt.archer.cache.CacheInitializerDelegate;
-import com.github.attt.archer.cache.annotation.Cache;
-import com.github.attt.archer.cache.annotation.CacheList;
-import com.github.attt.archer.cache.api.CacheInitializer;
-import com.github.attt.archer.cache.api.CacheShard;
-import com.github.attt.archer.cache.internal.ShardingCache;
-import com.github.attt.archer.cache.internal.ShardingCacheConfigure;
+import com.github.attt.archer.cache.InternalCacheFactory;
+import com.github.attt.archer.annotation.Cache;
+import com.github.attt.archer.annotation.CacheList;
+import com.github.attt.archer.cache.CacheFactory;
+import com.github.attt.archer.cache.CacheConfig;
+import com.github.attt.archer.cache.ShardingCache;
 import com.github.attt.archer.components.api.KeyGenerator;
 import com.github.attt.archer.components.api.ValueSerializer;
 import com.github.attt.archer.components.internal.InternalObjectValueSerializer;
 import com.github.attt.archer.constants.Serialization;
 import com.github.attt.archer.exception.CacheBeanParsingException;
 import com.github.attt.archer.exception.CacheOperationException;
-import com.github.attt.archer.invocation.InvocationInterceptor;
-import com.github.attt.archer.metadata.EvictionMetadata;
-import com.github.attt.archer.metadata.ListCacheMetadata;
-import com.github.attt.archer.metadata.ObjectCacheMetadata;
-import com.github.attt.archer.metadata.api.AbstractCacheMetadata;
-import com.github.attt.archer.operation.EvictionOperation;
-import com.github.attt.archer.operation.ListCacheOperation;
-import com.github.attt.archer.operation.ObjectCacheOperation;
+import com.github.attt.archer.interceptor.InvocationInterceptor;
+import com.github.attt.archer.annotation.metadata.EvictionMetadata;
+import com.github.attt.archer.annotation.metadata.ListCacheMetadata;
+import com.github.attt.archer.annotation.metadata.ObjectCacheMetadata;
+import com.github.attt.archer.annotation.metadata.AbstractCacheMetadata;
+import com.github.attt.archer.annotation.config.EvictionConfig;
+import com.github.attt.archer.annotation.config.ListCacheConfig;
+import com.github.attt.archer.annotation.config.ObjectCacheConfig;
 import com.github.attt.archer.stats.api.CacheEventCollector;
 import com.github.attt.archer.stats.api.listener.CacheStatsListener;
 import com.github.attt.archer.stats.collector.NamedCacheEventCollector;
@@ -65,9 +64,9 @@ public class Archer {
 
     private final CacheManager cacheManager = new CacheManager();
 
-    private CacheInitializerDelegate cacheInitializerDelegate = new CacheInitializerDelegate();
+    private InternalCacheFactory cacheInitializerDelegate = new InternalCacheFactory();
 
-    private final List<CacheShard> cacheShards = Collections.synchronizedList(new ArrayList<>());
+    private final List<CacheConfig> cacheConfigs = Collections.synchronizedList(new ArrayList<>());
 
     private Archer() {
     }
@@ -92,18 +91,18 @@ public class Archer {
         return this;
     }
 
-    public Archer setCacheConfigs(List<? extends CacheShard> configs) {
-        cacheShards.addAll(configs);
+    public Archer setCacheConfigs(List<? extends CacheConfig> configs) {
+        cacheConfigs.addAll(configs);
         return this;
     }
 
-    public Archer addCacheInitializer(CacheInitializer initializer) {
+    public Archer addCacheInitializer(CacheFactory initializer) {
         this.cacheInitializerDelegate.registerInitializer(initializer);
         return this;
     }
 
-    public Archer addCacheConfig(CacheShard shard) {
-        cacheShards.add(shard);
+    public Archer addCacheConfig(CacheConfig shard) {
+        cacheConfigs.add(shard);
         return this;
     }
 
@@ -139,7 +138,7 @@ public class Archer {
         for (Annotation cacheEvictAnnotation : cacheEvictAnnotations) {
             List<AbstractCacheMetadata> metadataList = CacheUtils.resolveMetadata(declaredMethod, cacheEvictAnnotation);
             for (AbstractCacheMetadata metadata : metadataList) {
-                EvictionOperation evictionOperation = new EvictionOperation();
+                EvictionConfig evictionOperation = new EvictionConfig();
                 evictionOperation.setMetadata((EvictionMetadata) metadata);
                 CacheEventCollector cacheEventCollector = new NamedCacheEventCollector(metadata.getMethodSignature());
                 if (CacheManager.Config.metricsEnabled) {
@@ -167,7 +166,7 @@ public class Archer {
                 List<AbstractCacheMetadata> metadataList = CacheUtils.resolveMetadata(declaredMethod, annotation);
                 for (AbstractCacheMetadata abstractMetadata : metadataList) {
                     ObjectCacheMetadata metadata = (ObjectCacheMetadata) abstractMetadata;
-                    ObjectCacheOperation cacheOperation = new ObjectCacheOperation();
+                    ObjectCacheConfig cacheOperation = new ObjectCacheConfig();
                     cacheOperation.setMetadata(metadata);
 
                     if (metadata.isMultiple()) {
@@ -225,7 +224,7 @@ public class Archer {
                 List<AbstractCacheMetadata> metadataList = CacheUtils.resolveMetadata(declaredMethod, annotation);
                 for (AbstractCacheMetadata abstractMetadata : metadataList) {
                     ListCacheMetadata metadata = (ListCacheMetadata) abstractMetadata;
-                    ListCacheOperation listCacheOperation = new ListCacheOperation();
+                    ListCacheConfig listCacheOperation = new ListCacheConfig();
                     listCacheOperation.setMetadata(metadata);
                     listCacheOperation.setLoader(CacheUtils.createListableCacheLoader());
                     Type cacheEntityType = CacheUtils.parseCacheEntityType(declaredMethod);
@@ -268,7 +267,7 @@ public class Archer {
     }
 
     private void sharding() {
-        ShardingCacheConfigure shardingCacheConfigure = new ShardingCacheConfigure(cacheInitializerDelegate, cacheShards);
+        ShardingCacheConfigure shardingCacheConfigure = new ShardingCacheConfigure(cacheInitializerDelegate, cacheConfigs);
         shardingCacheConfigure.init();
         ShardingCache shardingCache = new ShardingCache(shardingCacheConfigure);
         cacheManager.setShardingCache(shardingCache);

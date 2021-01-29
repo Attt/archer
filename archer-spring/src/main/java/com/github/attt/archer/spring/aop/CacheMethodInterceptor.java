@@ -1,7 +1,7 @@
 package com.github.attt.archer.spring.aop;
 
 import com.github.attt.archer.exception.CacheOperationException;
-import com.github.attt.archer.invocation.InvocationInterceptor;
+import com.github.attt.archer.interceptor.InvocationInterceptor;
 import org.aopalliance.intercept.MethodInterceptor;
 import org.aopalliance.intercept.MethodInvocation;
 import org.slf4j.Logger;

@@ -1,6 +1,6 @@
 package com.github.attt.archer.stats.event;
 
-import com.github.attt.archer.cache.api.Cache;
+import com.github.attt.archer.cache.Cache;
 import com.github.attt.archer.stats.api.CacheEvent;
 import com.github.attt.archer.stats.api.CacheEventCollector;
 

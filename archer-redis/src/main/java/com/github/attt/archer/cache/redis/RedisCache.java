@@ -1,7 +1,7 @@
 package com.github.attt.archer.cache.redis;
 
-import com.github.attt.archer.cache.api.Cache;
-import com.github.attt.archer.cache.api.CacheShard;
+import com.github.attt.archer.cache.Cache;
+import com.github.attt.archer.cache.CacheConfig;
 import com.github.attt.archer.components.api.Serializer;
 import com.github.attt.archer.components.api.ValueSerializer;
 import com.github.attt.archer.exception.CacheBeanParsingException;
@@ -46,7 +46,7 @@ public final class RedisCache implements Cache {
     }
 
     @Override
-    public void init(CacheShard shard) {
+    public void init(CacheConfig shard) {
         if (!(shard instanceof RedisShard)) {
             throw new CacheBeanParsingException("Cache operation shard info supplied is not a instance of RedisShard");
         }

@@ -1,8 +1,8 @@
 package com.github.attt.archer.util.resolver;
 
-import com.github.attt.archer.cache.annotation.Evict;
-import com.github.attt.archer.metadata.ClassCacheMetadata;
-import com.github.attt.archer.metadata.EvictionMetadata;
+import com.github.attt.archer.annotation.CacheEvict;
+import com.github.attt.archer.annotation.metadata.ClassCacheMetadata;
+import com.github.attt.archer.annotation.metadata.EvictionMetadata;
 
 import java.lang.reflect.Method;
 import java.util.ArrayList;
@@ -12,10 +12,10 @@ import java.util.List;
  * @author atpexgo.wu
  * @since 1.0
  */
-public class EvictResolver implements AnnotationResolver<Evict, List<EvictionMetadata>> {
+public class EvictResolver implements AnnotationResolver<CacheEvict, List<EvictionMetadata>> {
 
     @Override
-    public List<EvictionMetadata> resolve(Method method, ClassCacheMetadata classCacheMetadata, Evict annotation) {
+    public List<EvictionMetadata> resolve(Method method, ClassCacheMetadata classCacheMetadata, CacheEvict annotation) {
         List<EvictionMetadata> evictionMetadata = new ArrayList<>();
 
         String[] areas = new String[0];

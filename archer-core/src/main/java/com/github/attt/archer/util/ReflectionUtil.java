@@ -1,6 +1,8 @@
 package com.github.attt.archer.util;
 
 import com.alibaba.fastjson.JSON;
+import com.github.attt.archer.annotation.*;
+import com.github.attt.archer.config.annotation.annotation.*;
 import com.github.attt.archer.cache.annotation.*;
 import org.reflections.Configuration;
 import org.reflections.Reflections;
@@ -44,7 +46,7 @@ public class ReflectionUtil extends Reflections {
 
     @SuppressWarnings("unchecked")
     private static final Class<Annotation>[] EVICT_CACHE_METHOD_ANNOTATIONS = new Class[]{
-            Evict.class, Evicts.class
+            CacheEvict.class, Evicts.class
     };
 
 

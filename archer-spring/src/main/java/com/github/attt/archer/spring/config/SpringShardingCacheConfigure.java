@@ -1,9 +1,8 @@
 package com.github.attt.archer.spring.config;
 
-import com.github.attt.archer.cache.api.Cache;
-import com.github.attt.archer.cache.api.CacheInitializer;
-import com.github.attt.archer.cache.api.CacheShard;
-import com.github.attt.archer.cache.internal.ShardingCacheConfigure;
+import com.github.attt.archer.cache.Cache;
+import com.github.attt.archer.cache.CacheFactory;
+import com.github.attt.archer.cache.CacheConfig;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.BeansException;
@@ -28,7 +27,7 @@ public final class SpringShardingCacheConfigure extends ShardingCacheConfigure i
     private ApplicationContext applicationContext;
 
 
-    public SpringShardingCacheConfigure(CacheInitializer initializer, List<CacheShard> shardList) {
+    public SpringShardingCacheConfigure(CacheFactory initializer, List<CacheConfig> shardList) {
         super(initializer, shardList);
     }
 

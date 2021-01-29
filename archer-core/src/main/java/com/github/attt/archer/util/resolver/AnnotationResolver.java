@@ -1,7 +1,7 @@
 package com.github.attt.archer.util.resolver;
 
-import com.github.attt.archer.metadata.ClassCacheMetadata;
-import com.github.attt.archer.metadata.api.AbstractCacheMetadata;
+import com.github.attt.archer.annotation.metadata.ClassCacheMetadata;
+import com.github.attt.archer.annotation.metadata.AbstractCacheMetadata;
 import com.github.attt.archer.util.CommonUtils;
 import com.github.attt.archer.util.ReflectionUtil;
 

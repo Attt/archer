@@ -1,6 +1,6 @@
 package com.github.attt.archer.cache.caffeine;
 
-import com.github.attt.archer.cache.api.CacheShard;
+import com.github.attt.archer.cache.CacheConfig;
 
 /**
  * Caffeine config
@@ -8,7 +8,7 @@ import com.github.attt.archer.cache.api.CacheShard;
  * @author atpexgo.wu
  * @since 1.0
  */
-public final class CaffeineConfig implements CacheShard {
+public final class CaffeineConfig implements CacheConfig {
 
     private int initialCapacity = 1;
 

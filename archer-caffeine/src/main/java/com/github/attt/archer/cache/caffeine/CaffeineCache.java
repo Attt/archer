@@ -1,7 +1,7 @@
 package com.github.attt.archer.cache.caffeine;
 
-import com.github.attt.archer.cache.api.CacheShard;
-import com.github.attt.archer.cache.preset.HashMapCache;
+import com.github.attt.archer.cache.CacheConfig;
+import com.github.attt.archer.cache.HashMapCache;
 import com.github.attt.archer.stats.api.CacheEventCollector;
 import com.github.attt.archer.stats.event.CacheAccessEvent;
 import com.github.benmanes.caffeine.cache.Cache;
@@ -26,7 +26,7 @@ public final class CaffeineCache extends HashMapCache {
     private Cache<String, Set<String>> areaKeysCache;
 
     @Override
-    public void init(CacheShard shard) {
+    public void init(CacheConfig shard) {
         if (!(shard instanceof CaffeineConfig)) {
             throw new RuntimeException("Cache operation shard info supplied is not a instance of CaffeineShard");
         }

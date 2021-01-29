@@ -1,8 +1,8 @@
 package com.github.attt.archer.test.service;
 
-import com.github.attt.archer.cache.annotation.Cache;
-import com.github.attt.archer.cache.annotation.CacheList;
-import com.github.attt.archer.cache.annotation.CacheMapping;
+import com.github.attt.archer.annotation.Cache;
+import com.github.attt.archer.annotation.CacheList;
+import com.github.attt.archer.annotation.CacheMapping;
 import com.github.attt.archer.test.model.User;
 
 import java.util.ArrayList;

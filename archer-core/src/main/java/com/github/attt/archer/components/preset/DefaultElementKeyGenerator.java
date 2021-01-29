@@ -2,8 +2,8 @@ package com.github.attt.archer.components.preset;
 
 import com.github.attt.archer.components.api.KeyGenerator;
 import com.github.attt.archer.exception.CacheOperationException;
-import com.github.attt.archer.metadata.ListCacheMetadata;
-import com.github.attt.archer.metadata.api.AbstractCacheMetadata;
+import com.github.attt.archer.annotation.metadata.ListCacheMetadata;
+import com.github.attt.archer.annotation.metadata.AbstractCacheMetadata;
 import com.github.attt.archer.util.CommonUtils;
 import com.github.attt.archer.util.SpringElUtil;
 

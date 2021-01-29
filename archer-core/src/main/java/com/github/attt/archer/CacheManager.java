@@ -1,17 +1,17 @@
 package com.github.attt.archer;
 
-import com.github.attt.archer.cache.internal.ShardingCache;
+import com.github.attt.archer.cache.ShardingCache;
 import com.github.attt.archer.components.api.KeyGenerator;
 import com.github.attt.archer.components.api.Serializer;
 import com.github.attt.archer.constants.Serialization;
 import com.github.attt.archer.exception.CacheOperationException;
 import com.github.attt.archer.expression.CacheExpressionUtilObject;
-import com.github.attt.archer.metadata.CacheMetadata;
-import com.github.attt.archer.operation.api.AbstractCacheOperation;
-import com.github.attt.archer.operation.EvictionOperation;
-import com.github.attt.archer.processor.ListProcessor;
-import com.github.attt.archer.processor.ObjectProcessor;
-import com.github.attt.archer.processor.api.AbstractProcessor;
+import com.github.attt.archer.annotation.metadata.CacheMetadata;
+import com.github.attt.archer.annotation.config.AbstractCacheConfig;
+import com.github.attt.archer.annotation.config.EvictionConfig;
+import com.github.attt.archer.invoker.ListCacheInvoker;
+import com.github.attt.archer.invoker.CacheInvoker;
+import com.github.attt.archer.invoker.AbstractInvoker;
 import com.github.attt.archer.roots.Component;
 import com.github.attt.archer.roots.ListComponent;
 import com.github.attt.archer.roots.ObjectComponent;
@@ -59,13 +59,13 @@ public class CacheManager implements Component {
     /**
      * Manage all cache acceptation operation sources
      */
-    private Map<String, AbstractCacheOperation> cacheOperationMap = new ConcurrentHashMap<>();
+    private Map<String, AbstractCacheConfig> cacheOperationMap = new ConcurrentHashMap<>();
 
 
     /**
      * Manage all cache eviction operation sources
      */
-    private Map<String, EvictionOperation> evictionOperationMap = new ConcurrentHashMap<>();
+    private Map<String, EvictionConfig> evictionOperationMap = new ConcurrentHashMap<>();
 
     /**
      * Manage all method mapping to operation source name
@@ -75,7 +75,7 @@ public class CacheManager implements Component {
     /**
      * Manage all processors
      */
-    private Map<String, AbstractProcessor> processors = new ConcurrentHashMap<>();
+    private Map<String, AbstractInvoker> processors = new ConcurrentHashMap<>();
 
     /**
      * Manage all cache stats listeners
@@ -91,19 +91,19 @@ public class CacheManager implements Component {
         this.shardingCache = shardingCache;
     }
 
-    public Map<String, AbstractCacheOperation> getCacheOperationMap() {
+    public Map<String, AbstractCacheConfig> getCacheOperationMap() {
         return cacheOperationMap;
     }
 
-    public void setCacheOperationMap(Map<String, AbstractCacheOperation> cacheOperationMap) {
+    public void setCacheOperationMap(Map<String, AbstractCacheConfig> cacheOperationMap) {
         this.cacheOperationMap = cacheOperationMap;
     }
 
-    public Map<String, EvictionOperation> getEvictionOperationMap() {
+    public Map<String, EvictionConfig> getEvictionOperationMap() {
         return evictionOperationMap;
     }
 
-    public void setEvictionOperationMap(Map<String, EvictionOperation> evictionOperationMap) {
+    public void setEvictionOperationMap(Map<String, EvictionConfig> evictionOperationMap) {
         this.evictionOperationMap = evictionOperationMap;
     }
 
@@ -148,13 +148,13 @@ public class CacheManager implements Component {
      * @param <T>
      * @return
      */
-    public <T extends AbstractCacheOperation> List<T> getCacheOperations(String methodSignature, Class<T> sourceType) {
+    public <T extends AbstractCacheConfig> List<T> getCacheOperations(String methodSignature, Class<T> sourceType) {
         List<String> configNames = methodSignatureToOperationSourceName.getOrDefault(methodSignature, null);
 
         List<T> sources = new ArrayList<>();
         if (!CommonUtils.isEmpty(configNames)) {
             for (String configName : configNames) {
-                AbstractCacheOperation<CacheMetadata, Object> cacheOperation = cacheOperationMap.getOrDefault(configName, null);
+                AbstractCacheConfig<CacheMetadata, Object> cacheOperation = cacheOperationMap.getOrDefault(configName, null);
                 if (cacheOperation == null || !sourceType.isAssignableFrom(cacheOperation.getClass())) {
                     continue;
                 }
@@ -171,13 +171,13 @@ public class CacheManager implements Component {
      * @param methodSignature
      * @return
      */
-    public List<EvictionOperation> getEvictionOperations(String methodSignature) {
+    public List<EvictionConfig> getEvictionOperations(String methodSignature) {
         List<String> configNames = methodSignatureToOperationSourceName.getOrDefault(methodSignature, null);
 
-        List<EvictionOperation> evictionConfigs = new ArrayList<>();
+        List<EvictionConfig> evictionConfigs = new ArrayList<>();
         if (!CommonUtils.isEmpty(configNames)) {
             for (String configName : configNames) {
-                EvictionOperation evictionOperation = evictionOperationMap.getOrDefault(configName, null);
+                EvictionConfig evictionOperation = evictionOperationMap.getOrDefault(configName, null);
                 if (evictionOperation == null) {
                     continue;
                 }
@@ -193,7 +193,7 @@ public class CacheManager implements Component {
      *
      * @return
      */
-    public Collection<AbstractProcessor> getProcessors(){
+    public Collection<AbstractInvoker> getProcessors(){
         return processors.values();
     }
 
@@ -203,7 +203,7 @@ public class CacheManager implements Component {
      * @param cacheOperation
      * @return
      */
-    public AbstractProcessor getProcessor(AbstractCacheOperation cacheOperation) {
+    public AbstractInvoker getProcessor(AbstractCacheConfig cacheOperation) {
         List<String> componentInterfaces = new ArrayList<>();
         Class<?>[] interfaces = cacheOperation.getClass().getInterfaces();
         for (Class<?> ifc : interfaces) {
@@ -228,7 +228,7 @@ public class CacheManager implements Component {
      * @param <C>
      * @return
      */
-    public <C extends Component> AbstractProcessor getProcessor(Class<C> type) {
+    public <C extends Component> AbstractInvoker getProcessor(Class<C> type) {
         return processors.getOrDefault(type.toString(), null);
     }
 
@@ -242,11 +242,11 @@ public class CacheManager implements Component {
         // because complex cache may has the same key name with object cache
         // but need deal with more data than object cache when evicting
 
-        ListProcessor<?> listServiceCacheProcessor = new ListProcessor<>();
+        ListCacheInvoker<?> listServiceCacheProcessor = new ListCacheInvoker<>();
         listServiceCacheProcessor.afterInitialized(this);
         processors.put(ListComponent.class.toString(), listServiceCacheProcessor);
 
-        ObjectProcessor<?> objectServiceCacheProcessor = new ObjectProcessor<>();
+        CacheInvoker<?> objectServiceCacheProcessor = new CacheInvoker<>();
         objectServiceCacheProcessor.afterInitialized(this);
         processors.put(ObjectComponent.class.toString(), objectServiceCacheProcessor);
     }

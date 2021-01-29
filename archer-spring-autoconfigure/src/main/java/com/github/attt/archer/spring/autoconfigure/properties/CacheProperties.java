@@ -1,6 +1,6 @@
 package com.github.attt.archer.spring.autoconfigure.properties;
 
-import com.github.attt.archer.cache.api.CacheShard;
+import com.github.attt.archer.cache.CacheConfig;
 import com.github.attt.archer.cache.caffeine.CaffeineConfig;
 import com.github.attt.archer.cache.redis.RedisShard;
 import org.springframework.boot.context.properties.ConfigurationProperties;
@@ -73,7 +73,7 @@ public class CacheProperties {
 
     }
 
-    public List<CacheShard> toShardsInfo() {
+    public List<CacheConfig> toShardsInfo() {
         if (redis != null && !CollectionUtils.isEmpty(redis.shards)) {
             for (RedisShard shard : redis.shards) {
                 if (shard.getReadTimeout() == DEFAULT_TIMEOUT && redis.readTimeout != DEFAULT_TIMEOUT) {

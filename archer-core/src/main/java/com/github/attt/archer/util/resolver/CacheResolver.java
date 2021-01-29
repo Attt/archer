@@ -1,8 +1,8 @@
 package com.github.attt.archer.util.resolver;
 
-import com.github.attt.archer.cache.annotation.Cache;
-import com.github.attt.archer.metadata.ClassCacheMetadata;
-import com.github.attt.archer.metadata.ObjectCacheMetadata;
+import com.github.attt.archer.annotation.Cache;
+import com.github.attt.archer.annotation.metadata.ClassCacheMetadata;
+import com.github.attt.archer.annotation.metadata.ObjectCacheMetadata;
 
 import java.lang.reflect.Method;
 import java.util.Collections;

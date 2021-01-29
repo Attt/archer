@@ -3,7 +3,7 @@ package com.github.attt.archer.example.service;
 import com.github.attt.archer.cache.annotation.Cacheable;
 import com.github.attt.archer.example.model.User;
 import com.github.attt.archer.example.repository.UserRepository;
-import com.github.attt.archer.invocation.CacheContext;
+import com.github.attt.archer.interceptor.ManualCacheHandler;
 import org.springframework.stereotype.Service;
 
 import java.util.Comparator;
@@ -98,8 +98,8 @@ public class UserServiceImpl implements UserService {
     public void renameUser(Long userId, String userName) {
         User user = userRepository.queryUser(userId);
         if (user != null) {
-            if(CacheContext.exist("archer:example:user:page:1")) {
-                CacheContext.evict("archer:example:user:page:1");
+            if(ManualCacheHandler.exist("archer:example:user:page:1")) {
+                ManualCacheHandler.evict("archer:example:user:page:1");
             }
             userRepository.renameUser(userId, userName);
         }
