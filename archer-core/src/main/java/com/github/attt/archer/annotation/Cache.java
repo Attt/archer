@@ -21,12 +21,12 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
 public @interface Cache {
 
     /**
-     * 是否作为一个整体缓存，如果是false则缓存的内容必须是列表、
+     * 是否将结果拆成多个缓存，如果是true则缓存的内容必须是列表、
      * 数组、表等数据结构
      *
      * @return 默认是按照一个整体缓存
      */
-    boolean asOne() default true;
+    boolean multi() default false;
 
     /**
      * 缓存区域，用于隔离区分不同用途的缓存，也就是不同的region中的缓存

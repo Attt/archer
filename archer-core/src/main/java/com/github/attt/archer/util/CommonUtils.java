@@ -7,6 +7,7 @@ import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.util.Collection;
 import java.util.Map;
+import java.util.function.Predicate;
 import java.util.function.Supplier;
 
 /**
@@ -139,6 +140,13 @@ public class CommonUtils {
             return fallback;
         }
         return supplier.get();
+    }
+
+    public static <T> T escape(T o, Predicate<T> fallbackTest, T fallback) {
+        if (fallbackTest.test(o)) {
+            return fallback;
+        }
+        return o;
     }
 
     public static boolean contains(Object[] array, Object obj) {

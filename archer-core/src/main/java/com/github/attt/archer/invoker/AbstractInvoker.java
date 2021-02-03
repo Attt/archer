@@ -91,18 +91,18 @@ public abstract class AbstractInvoker<C extends AbstractCacheProperties<?, V>, V
     }
 
     @Override
-    public void delete(String area, String key) {
-        cache.remove(area, area + DEFAULT_DELIMITER + key, manualCacheEventCollector);
+    public void delete(String region, String key) {
+        cache.remove(region, region + DEFAULT_DELIMITER + key, manualCacheEventCollector);
     }
 
     @Override
-    public void deleteAll(String area) {
-        cache.removeAll(area, manualCacheEventCollector);
+    public void deleteAll(String region) {
+        cache.removeAll(region, manualCacheEventCollector);
     }
 
     @Override
-    public boolean exist(String area, String key) {
-        return cache.containsKey(area, area + DEFAULT_DELIMITER + key, manualCacheEventCollector);
+    public boolean exist(String region, String key) {
+        return cache.containsKey(region, region + DEFAULT_DELIMITER + key, manualCacheEventCollector);
     }
 
     protected String generateCacheKey(InvocationContext context, AbstractCacheMetadata metadata) {

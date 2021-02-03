@@ -43,6 +43,11 @@ public class Controller {
         return userService.getUsers(userIds);
     }
 
+    /**
+     * Remove order support since version 1.0-rc4
+     * @return
+     */
+    @Deprecated
     @RequestMapping(value = "/getUsersOrderByAgeReversed", method = RequestMethod.GET)
     List<User> getUsersOrderByAgeReversed() {
         List<Long> userIds = new ArrayList<>();

@@ -166,7 +166,7 @@ public class CacheUtils {
     }
 
     /**
-     * Create loader for {@link Cache} which {@link Cache#asOne()} is false
+     * Create loader for {@link Cache} which {@link Cache#multi()} is true
      * <p>
      * Load all data whether all caches are missing or part of caches is missing:
      * <ul>
@@ -239,9 +239,10 @@ public class CacheUtils {
                 }
                 Object[] mappedArgs = new Object[indexedMapTo.size()];
                 for (int i1 = 0; i1 < indexedMapToEntries.size(); i1++) {
-                    CacheMapping mapTo = (CacheMapping) indexedMapToEntries.get(i1).getValue();
-                    String expression = "#result$each." + mapTo.toResult();
-                    if (CommonUtils.isEmpty(mapTo.toResult())) {
+                    CacheMapping cacheMapping = (CacheMapping) indexedMapToEntries.get(i1).getValue();
+                    String mapping = CommonUtils.escape(cacheMapping.toResult(), s -> "".equals(cacheMapping.toResult()), cacheMapping.value());
+                    String expression = "#result$each." + mapping;
+                    if (CommonUtils.isEmpty(mapping)) {
                         expression = "#result$each";
                     }
                     Object arg = new SpringElUtil.SpringELEvaluationContext(expression).addVar("result$each", element).getValue();

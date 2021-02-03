@@ -1,6 +1,6 @@
 package com.github.attt.archer.example.service;
 
-import com.github.attt.archer.cache.annotation.Cacheable;
+import com.github.attt.archer.annotation.ArcherCache;
 import com.github.attt.archer.example.model.User;
 import com.github.attt.archer.example.repository.UserRepository;
 import com.github.attt.archer.interceptor.ManualCacheHandler;
@@ -15,7 +15,7 @@ import java.util.List;
  * @author atpexgo.wu
  * @since 1.0.0
  */
-@Cacheable(prefix = "archer:example:user")
+@ArcherCache(prefix = "archer:example:user")
 @Service
 public class UserServiceImpl implements UserService {
 

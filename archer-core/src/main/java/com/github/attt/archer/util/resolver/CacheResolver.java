@@ -33,7 +33,7 @@ public class CacheResolver implements AnnotationResolver<Cache, List<ObjectCache
         metadata.setBreakdownProtect(annotation.protection().breakdownProtect());
         metadata.setBreakdownProtectTimeoutInMillis(annotation.protection().breakdownProtectTimeUnit().toMillis(annotation.protection().breakdownProtectTimeout()));
         metadata.setValueSerializer(chooseValue(classCacheMetadata.getValueSerializer(), annotation.valueSerializer()));
-        metadata.setMultiple(!annotation.asOne());
+        metadata.setMultiple(annotation.multi());
 
         return Collections.singletonList(metadata);
     }

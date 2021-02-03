@@ -24,7 +24,7 @@ public class UserService {
         return user;
     }
 
-    @Cache(key = "'user:' + #userIds$each", asOne = false)
+    @Cache(key = "'user:' + #userIds$each", multi = false)
     public List<User> getUsersByIdList(@CacheMapping(toResult = "id") List<Long> userIds) {
         List<User> users = new ArrayList<>();
         for (Long userId : userIds) {

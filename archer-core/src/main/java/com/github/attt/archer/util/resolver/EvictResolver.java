@@ -18,16 +18,16 @@ public class EvictResolver implements AnnotationResolver<CacheEvict, List<Evicti
     public List<EvictionMetadata> resolve(Method method, ClassCacheMetadata classCacheMetadata, CacheEvict annotation) {
         List<EvictionMetadata> evictionMetadata = new ArrayList<>();
 
-        String[] areas = new String[0];
+        String[] regions = new String[0];
         if (annotation.regions().length == 0) {
             if (classCacheMetadata.getRegion() != null) {
-                areas = new String[]{classCacheMetadata.getRegion()};
+                regions = new String[]{classCacheMetadata.getRegion()};
             }
         } else {
-            areas = annotation.regions();
+            regions = annotation.regions();
         }
 
-        for (String area : areas) {
+        for (String region : regions) {
             for (String key : annotation.keys()) {
                 EvictionMetadata metadata = new EvictionMetadata();
                 resolveCommon(
@@ -38,9 +38,10 @@ public class EvictResolver implements AnnotationResolver<CacheEvict, List<Evicti
                         key,
                         annotation.condition(),
                         chooseValue(classCacheMetadata.getKeyGenerator(), annotation.keyGenerator()),
-                        area
+                        region
                 );
                 metadata.setAll(annotation.all());
+                metadata.setMultiple(annotation.multi());
                 metadata.setAfterInvocation(annotation.afterInvocation());
                 evictionMetadata.add(metadata);
             }

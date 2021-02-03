@@ -94,6 +94,9 @@ public class CacheBeanDefinitionRegistryProcessor implements BeanDefinitionRegis
 
         String[] beanNames = registry.getBeanDefinitionNames();
         for (final String beanName : beanNames) {
+            if (beanName.contains("org.springframework")) {
+                continue;
+            }
             AbstractBeanDefinition beanDefinition = (AbstractBeanDefinition) registry.getBeanDefinition(beanName);
             Class<?> clazz;
             if (beanDefinition.hasBeanClass()) {
@@ -334,13 +337,12 @@ public class CacheBeanDefinitionRegistryProcessor implements BeanDefinitionRegis
     private Object chooseValueSerializer(String userValueSerializer, Type cacheEntityType) {
         Object valueSerializer;
         if (CommonUtils.isEmpty(userValueSerializer)) {
-            valueSerializer = internalValueSerializers.compute(cacheEntityType.getTypeName(), (key, internalObjectValueSerializer) -> {
-                if (internalObjectValueSerializer == null) {
-                    internalObjectValueSerializer = new InternalObjectValueSerializer<>(cacheEntityType);
-                    internalValueSerializers.put(key, internalObjectValueSerializer);
-                }
-                return internalObjectValueSerializer;
-            });
+            InternalObjectValueSerializer cachedValueSerializer = internalValueSerializers.get(cacheEntityType.getTypeName());
+            if (cachedValueSerializer == null) {
+                cachedValueSerializer = new InternalObjectValueSerializer<>(cacheEntityType);
+                internalValueSerializers.put(cacheEntityType.getTypeName(), cachedValueSerializer);
+            }
+            return cachedValueSerializer;
         } else {
             valueSerializer = new RuntimeBeanReference(userValueSerializer);
         }

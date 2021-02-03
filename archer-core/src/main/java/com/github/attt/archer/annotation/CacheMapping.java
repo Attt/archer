@@ -30,4 +30,9 @@ public @interface CacheMapping {
      */
     String toResult() default "";
 
+    /**
+     * alias for {@link #toResult()}
+     * @return
+     */
+    String value() default "";
 }

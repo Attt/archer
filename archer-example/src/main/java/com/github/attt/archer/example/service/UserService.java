@@ -2,15 +2,14 @@ package com.github.attt.archer.example.service;
 
 
 import com.github.attt.archer.annotation.Cache;
-import com.github.attt.archer.annotation.CacheList;
 import com.github.attt.archer.annotation.CacheEvict;
-import com.github.attt.archer.cache.annotation.*;
-import com.github.attt.archer.cache.annotation.extra.MapTo;
+import com.github.attt.archer.annotation.CacheList;
+import com.github.attt.archer.annotation.CacheMapping;
 import com.github.attt.archer.example.model.User;
 
 import java.util.List;
 
-import static com.github.attt.archer.constants.Constants.DEFAULT_AREA;
+import static com.github.attt.archer.constants.Constants.DEFAULT_REGION;
 
 /**
  * @author atpexgo.wu
@@ -30,7 +29,7 @@ public interface UserService {
      * @param pageSize
      * @return
      */
-    @CacheList(key = "'page:' + #pageId", elementKey = "#result$each.id", condition = "#pageId == 1")
+    @CacheList(key = "'page:' + #pageId", element = @Cache(key = "#result$each.id"), condition = "#pageId == 1")
     List<User> getUsers(int pageId, int pageSize);
 
     /**
@@ -43,7 +42,7 @@ public interface UserService {
      * @param pageSize
      * @return
      */
-    @CacheList(area = "custom", elementArea = "custom", key = "'page:' + #pageId", elementKey = "#result$each.id", condition = "#pageId == 1")
+    @CacheList(region = "custom", element = @Cache(region = "custom", key = "#result$each.id"), key = "'page:' + #pageId", condition = "#pageId == 1")
     List<User> getUsersWithSpecifiedArea(int pageId, int pageSize);
 
     // 对象缓存
@@ -65,8 +64,8 @@ public interface UserService {
      * @param userIds
      * @return
      */
-    @CacheMulti(elementKey = "#userIds$each")
-    List<User> getUsers(@MapTo("#result$each.id") List<Long> userIds);
+    @Cache(multi = true, key = "#userIds$each")
+    List<User> getUsers(@CacheMapping("id") List<Long> userIds);
 
     /**
      * 多对象缓存
@@ -76,8 +75,8 @@ public interface UserService {
      * @param userIds
      * @return
      */
-    @CacheMulti(elementKey = "#userIds$each", orderBy = "#result$each.userOrder()")
-    List<User> getUsersOrderByAgeReversed(@MapTo("#result$each.id") List<Long> userIds);
+    @Cache(multi = true, key = "#userIds$each")
+    List<User> getUsersOrderByAgeReversed(@CacheMapping("id") List<Long> userIds);
 
     /**
      * 多对象缓存
@@ -88,8 +87,8 @@ public interface UserService {
      * @param userIds
      * @return
      */
-    @CacheMulti(elementKey = "#userIds$each")
-    List<User> getUsersWithMultipleParameters(String flag, @MapTo("#result$each.id") List<Long> userIds);
+    @Cache(multi = true, key = "#userIds$each")
+    List<User> getUsersWithMultipleParameters(String flag, @CacheMapping("id") List<Long> userIds);
 
     // 淘汰缓存
 
@@ -98,7 +97,7 @@ public interface UserService {
      *
      * @param user
      */
-    @CacheEvict(key = "#user.id")
+    @CacheEvict(keys = "#user.id")
     void addUser(User user);
 
 
@@ -107,25 +106,29 @@ public interface UserService {
      *
      * @param userIds
      */
-    @EvictMulti(elementKey = "#userIds.size()")
+    @CacheEvict(multi = true, keys = "#userIds$each")
     void deleteUsers(List<Long> userIds);
 
     /**
+     * Deprecated since 1.0-rc4
+     * due to regions is considered now even if all is set to true
+     * <p>
      * 淘汰整个缓存区域
      */
+    @Deprecated
     @CacheEvict(all = true)
     void deleteAllUser();
 
     /**
      * 淘汰整个缓存区域, 指定area
      */
-    @CacheEvict(all = true, area = "custom")
+    @CacheEvict(all = true, regions = "custom")
     void deleteAllCustomAreaUser();
 
     /**
      * 淘汰整个缓存区域, 所有area
      */
-    @CacheEvict(all = true, area = {"custom", DEFAULT_AREA})
+    @CacheEvict(all = true, regions = {"custom", DEFAULT_REGION})
     void deleteAllAreaUser();
 
     /**
