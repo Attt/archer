@@ -3,9 +3,9 @@ package com.github.attt.archer.spring.config;
 
 import com.github.attt.archer.CacheManager;
 import com.github.attt.archer.cache.ShardingCache;
-import com.github.attt.archer.components.api.KeyGenerator;
-import com.github.attt.archer.components.api.Serializer;
-import com.github.attt.archer.components.internal.InternalObjectValueSerializer;
+import com.github.attt.archer.cache.KeyGenerator;
+import com.github.attt.archer.cache.Serializer;
+import com.github.attt.archer.cache.internal.InternalObjectValueSerializer;
 import com.github.attt.archer.constants.Serialization;
 import com.github.attt.archer.exception.CacheBeanParsingException;
 import com.github.attt.archer.interceptor.InvocationInterceptor;
@@ -14,13 +14,13 @@ import com.github.attt.archer.annotation.metadata.EvictionMetadata;
 import com.github.attt.archer.annotation.metadata.ListCacheMetadata;
 import com.github.attt.archer.annotation.metadata.ObjectCacheMetadata;
 import com.github.attt.archer.annotation.metadata.AbstractCacheMetadata;
-import com.github.attt.archer.annotation.config.EvictionConfig;
-import com.github.attt.archer.annotation.config.ListCacheConfig;
-import com.github.attt.archer.annotation.config.ObjectCacheConfig;
-import com.github.attt.archer.annotation.config.AbstractCacheConfig;
-import com.github.attt.archer.stats.api.CacheEvent;
-import com.github.attt.archer.stats.api.listener.CacheStatsListener;
-import com.github.attt.archer.stats.collector.NamedCacheEventCollector;
+import com.github.attt.archer.annotation.config.EvictionProperties;
+import com.github.attt.archer.annotation.config.ListCacheProperties;
+import com.github.attt.archer.annotation.config.ObjectCacheProperties;
+import com.github.attt.archer.annotation.config.AbstractCacheProperties;
+import com.github.attt.archer.metrics.api.CacheEvent;
+import com.github.attt.archer.metrics.api.listener.CacheMetricsListener;
+import com.github.attt.archer.metrics.collector.NamedCacheEventCollector;
 import com.github.attt.archer.util.CacheUtils;
 import com.github.attt.archer.util.CommonUtils;
 import com.github.attt.archer.util.ReflectionUtil;
@@ -54,17 +54,19 @@ public class CacheBeanDefinitionRegistryProcessor implements BeanDefinitionRegis
     private final BeanNameGenerator beanNameGenerator = new DefaultBeanNameGenerator();
 
     /**
-     * Use this map to avoid to create duplicated internal serializer
+     * 复用无状态的valueSerializer，每个类型（key）只创建一个实例
      */
     @SuppressWarnings("rawtypes")
     private final Map<String, InternalObjectValueSerializer> internalValueSerializers = new ConcurrentHashMap<>();
 
     /**
-     * Use this map to save method signature mapping to operation source bean name
-     * It will be passed to {@link CacheManager} bean after all operation source
-     * registered.
+     * 保存长方法签名到properties的bean name的映射。<br>
+     * 长方法签名是指[类全名+方法全名+方法参数类型全名]，如：<br>
+     * com.sample.module.ClassA.methodB(java.lang.Long, com.sample.ModelC, java.util.List) <br>
+     *
+     * @see ReflectionUtil#getSignature(Method, boolean, boolean)
      */
-    private final Map<String, List<String>> methodSignatureToOperationName = new ConcurrentHashMap<>();
+    private final Map<String, List<String>> methodSignatureToPropertiesName = new ConcurrentHashMap<>();
 
     private ClassLoader classLoader;
 
@@ -78,14 +80,15 @@ public class CacheBeanDefinitionRegistryProcessor implements BeanDefinitionRegis
     }
 
     /**
-     * Iterate bean definitions and register
-     * <p>
-     * cache operation source
-     * cache management
-     * cache handler
+     * 扫描spring管理的所有bean，找出所有启用缓存注解的类和方法，<br>
+     * 解析出对应的metadata，根据metadata的配置信息从spring中找到 <br>
+     * 符合条件的组件装配成properties，再将properties注册到spring中。
      *
-     * @param registry
+     * @param registry spring的bean定义注册器
      * @throws ClassNotFoundException
+     * @see ReflectionUtil
+     * @see AbstractCacheMetadata
+     * @see AbstractCacheProperties
      */
     private void registerCache(final BeanDefinitionRegistry registry) throws ClassNotFoundException {
 
@@ -106,15 +109,15 @@ public class CacheBeanDefinitionRegistryProcessor implements BeanDefinitionRegis
                     for (Annotation annotation : cacheAnnotations) {
                         switch (ReflectionUtil.typeOf(annotation)) {
                             case OBJECT:
-                                registerObjectCacheOperationSource(method, annotation, registry);
+                                registerObjectCacheProperties(method, annotation, registry);
                                 break;
                             case LIST:
-                                registerListCacheOperationSource(method, annotation, registry);
+                                registerListCacheProperties(method, annotation, registry);
                                 break;
                             case EVICT:
                                 List<Annotation> annotations = ReflectionUtil.getRepeatableCacheAnnotations(method);
                                 if (annotations.size() > 0) {
-                                    registerEvictionCacheOperationSource(method, annotations, registry);
+                                    registerEvictionProperties(method, annotations, registry);
                                 }
                                 break;
                             case NULL:
@@ -127,7 +130,7 @@ public class CacheBeanDefinitionRegistryProcessor implements BeanDefinitionRegis
         }
     }
 
-    private void registerObjectCacheOperationSource(
+    private void registerObjectCacheProperties(
             final Method method,
             final Annotation annotation,
             final BeanDefinitionRegistry registry
@@ -135,16 +138,21 @@ public class CacheBeanDefinitionRegistryProcessor implements BeanDefinitionRegis
         if (annotation == null) {
             return;
         }
+        // 获取方法的长签名
         final String methodSignature = ReflectionUtil.getSignature(method, true, true);
 
+        // 获取返回类型信息
         final Type returnType = method.getGenericReturnType();
 
+        // 通过方法和其注解解析出metadata
         List<AbstractCacheMetadata> metadataList = CacheUtils.resolveMetadata(method, annotation);
         for (AbstractCacheMetadata abstractMetadata : metadataList) {
             final ObjectCacheMetadata metadata = (ObjectCacheMetadata) abstractMetadata;
 
+            // 如果是multi缓存，返回值可能为集合或数组，需要解析出元素类型作为缓存类型
             Type cacheEntityType = metadata.isMultiple() ? CacheUtils.parseCacheEntityType(method) : returnType;
 
+            // 检查序列化方式是否支持当前的缓存类型
             if (CacheManager.Config.valueSerialization == Serialization.HESSIAN || CacheManager.Config.valueSerialization == Serialization.JAVA) {
                 if (!Serializable.class.isAssignableFrom(ReflectionUtil.toClass(cacheEntityType))) {
                     throw new CacheBeanParsingException("To use Hessian or Java serialization, " + cacheEntityType.getTypeName() + " must implement java.io.Serializable");
@@ -153,18 +161,12 @@ public class CacheBeanDefinitionRegistryProcessor implements BeanDefinitionRegis
 
             logger.debug("CacheClass is : {}", cacheEntityType.getTypeName());
 
-            // value serializer
+            // 用户自定义的value serializer的bean name
             final String userValueSerializer = metadata.getValueSerializer();
-            Object valueSerializer;
-            if (CommonUtils.isEmpty(userValueSerializer)) {
-                valueSerializer = internalValueSerializers.getOrDefault(cacheEntityType.getTypeName(),
-                        new InternalObjectValueSerializer<>(cacheEntityType));
-            } else {
-                valueSerializer = new RuntimeBeanReference(userValueSerializer);
-            }
+            Object valueSerializer = chooseValueSerializer(userValueSerializer, cacheEntityType);
 
-            // register cache operation source bean definition
-            AbstractBeanDefinition cacheOperationDefinition = BeanDefinitionBuilder.genericBeanDefinition(ObjectCacheConfig.class)
+            // 注册cache properties bean定义
+            AbstractBeanDefinition cachePropertiesDefinition = BeanDefinitionBuilder.genericBeanDefinition(ObjectCacheProperties.class)
                     .addPropertyValue("metadata", metadata)
                     .addPropertyValue("loader", metadata.isMultiple() ? null : CacheUtils.resolveSingleLoader(method))
                     .addPropertyValue("multipleLoader", metadata.isMultiple() ? CacheUtils.resolveMultiLoader(method) : null)
@@ -172,17 +174,17 @@ public class CacheBeanDefinitionRegistryProcessor implements BeanDefinitionRegis
                     .addPropertyValue("cacheEventCollector", new NamedCacheEventCollector(metadata.getMethodSignature()))
                     .getBeanDefinition();
 
-            String operationName = beanNameGenerator.generateBeanName(cacheOperationDefinition, registry);
-            registry.registerBeanDefinition(operationName, cacheOperationDefinition);
+            String propertiesName = beanNameGenerator.generateBeanName(cachePropertiesDefinition, registry);
+            registry.registerBeanDefinition(propertiesName, cachePropertiesDefinition);
 
-            // mapping method to operation source bean
-            methodSignatureToOperationName.computeIfAbsent(methodSignature, sigKey -> new ArrayList<>()).add(operationName);
+            // 将方法长签名与注册就绪的properties的bean name映射
+            methodSignatureToPropertiesName.computeIfAbsent(methodSignature, sigKey -> new ArrayList<>()).add(propertiesName);
         }
 
     }
 
 
-    private void registerListCacheOperationSource(
+    private void registerListCacheProperties(
             final Method method,
             final Annotation annotation,
             final BeanDefinitionRegistry registry) {
@@ -190,59 +192,58 @@ public class CacheBeanDefinitionRegistryProcessor implements BeanDefinitionRegis
             return;
         }
 
+        // 检查返回类型是否是数组或集合
         if (!ReflectionUtil.isCollectionOrArray(method.getReturnType())) {
-            throw new CacheBeanParsingException("Listable cacheable method return type should be an array or Collection!");
+            throw new CacheBeanParsingException("Listable cacheable method return type should be an array or java.util.Collection!");
         }
 
+        // 获取方法的长签名
         final String methodSignature = ReflectionUtil.getSignature(method, true, true);
 
+        // 获取返回类型信息
         final Type cacheEntityType = CacheUtils.parseCacheEntityType(method);
 
+        // 检查序列化方式是否支持当前的缓存类型
         if (CacheManager.Config.valueSerialization == Serialization.HESSIAN || CacheManager.Config.valueSerialization == Serialization.JAVA) {
             if (!Serializable.class.isAssignableFrom(ReflectionUtil.toClass(cacheEntityType))) {
                 throw new CacheBeanParsingException("To use Hessian or Java serialization, " + cacheEntityType.getTypeName() + " must implement java.io.Serializable");
             }
         }
 
+        // 通过方法和其注解解析出metadata
         List<AbstractCacheMetadata> metadataList = CacheUtils.resolveMetadata(method, annotation);
         for (AbstractCacheMetadata abstractMetadata : metadataList) {
             final ListCacheMetadata metadata = (ListCacheMetadata) abstractMetadata;
 
             logger.debug("CacheEntityClass is : {}", cacheEntityType.getTypeName());
 
-            // create loader proxy
+            // 创建加载器代理
             SingleLoader<?> loader = CacheUtils.createListableCacheLoader();
 
-            // operation source class
-            BeanDefinitionBuilder cacheOperationDefinitionBuilder = BeanDefinitionBuilder.genericBeanDefinition(ListCacheConfig.class);
+            // list cache properties class
+            BeanDefinitionBuilder listCacheProperties = BeanDefinitionBuilder.genericBeanDefinition(ListCacheProperties.class);
 
-            // value serializer
+            // 用户自定义的value serializer的bean name
             final String userElementValueSerializer = metadata.getElementValueSerializer();
-            Object valueSerializer;
-            if (CommonUtils.isEmpty(userElementValueSerializer)) {
-                valueSerializer = internalValueSerializers.getOrDefault(cacheEntityType.getTypeName(),
-                        new InternalObjectValueSerializer<>(cacheEntityType));
-            } else {
-                valueSerializer = new RuntimeBeanReference(userElementValueSerializer);
-            }
+            Object valueSerializer = chooseValueSerializer(userElementValueSerializer, cacheEntityType);
 
-            // register cache operation source bean definition
-            AbstractBeanDefinition cacheOperationDefinition = cacheOperationDefinitionBuilder
+            // 注册list cache properties bean定义
+            AbstractBeanDefinition cachePropertiesDefinition = listCacheProperties
                     .addPropertyValue("metadata", metadata)
                     .addPropertyValue("loader", loader)
                     .addPropertyValue("valueSerializer", valueSerializer)
                     .addPropertyValue("cacheEventCollector", new NamedCacheEventCollector(metadata.getMethodSignature()))
                     .getBeanDefinition();
 
-            String operationName = beanNameGenerator.generateBeanName(cacheOperationDefinition, registry);
-            registry.registerBeanDefinition(operationName, cacheOperationDefinition);
+            String propertiesName = beanNameGenerator.generateBeanName(cachePropertiesDefinition, registry);
+            registry.registerBeanDefinition(propertiesName, cachePropertiesDefinition);
 
-            // mapping method to operation source bean
-            methodSignatureToOperationName.computeIfAbsent(methodSignature, sigKey -> new ArrayList<>()).add(operationName);
+            // 将方法长签名与注册就绪的properties的bean name映射
+            methodSignatureToPropertiesName.computeIfAbsent(methodSignature, sigKey -> new ArrayList<>()).add(propertiesName);
         }
     }
 
-    private void registerEvictionCacheOperationSource(
+    private void registerEvictionProperties(
             final Method method,
             final List<Annotation> annotationList,
             final BeanDefinitionRegistry registry) {
@@ -252,17 +253,17 @@ public class CacheBeanDefinitionRegistryProcessor implements BeanDefinitionRegis
             for (AbstractCacheMetadata abstractMetadata : metadataList) {
                 EvictionMetadata metadata = (EvictionMetadata) abstractMetadata;
 
-                // register cache OperationSource bean definition
-                AbstractBeanDefinition evictionOperationDefinition = BeanDefinitionBuilder.genericBeanDefinition(EvictionConfig.class)
+                // 注册eviction properties bean定义
+                AbstractBeanDefinition evictionPropertiesDefinition = BeanDefinitionBuilder.genericBeanDefinition(EvictionProperties.class)
                         .addPropertyValue("metadata", metadata)
                         .addPropertyValue("cacheEventCollector", new NamedCacheEventCollector(metadata.getMethodSignature()))
                         .getBeanDefinition();
 
-                String operationName = beanNameGenerator.generateBeanName(evictionOperationDefinition, registry);
-                registry.registerBeanDefinition(operationName, evictionOperationDefinition);
+                String propertiesName = beanNameGenerator.generateBeanName(evictionPropertiesDefinition, registry);
+                registry.registerBeanDefinition(propertiesName, evictionPropertiesDefinition);
 
-                // mapping method to OperationSource bean
-                methodSignatureToOperationName.computeIfAbsent(methodSignature, sigKey -> new ArrayList<>()).add(operationName);
+                // 将方法长签名与注册就绪的properties的bean name映射
+                methodSignatureToPropertiesName.computeIfAbsent(methodSignature, sigKey -> new ArrayList<>()).add(propertiesName);
             }
         }
     }
@@ -278,10 +279,10 @@ public class CacheBeanDefinitionRegistryProcessor implements BeanDefinitionRegis
     public void postProcessBeanFactory(ConfigurableListableBeanFactory beanFactory) throws BeansException {
         beanFactory.addBeanPostProcessor(new CacheBeanPostProcessor());
 
-        // register cache manager
+        // 创建cache manager
         CacheManager cacheManager = new CacheManager();
         // pass reference to cacheManager
-        cacheManager.setMethodSignatureToOperationSourceName(methodSignatureToOperationName);
+        cacheManager.setMethodSignatureToPropertiesName(methodSignatureToPropertiesName);
 
         Map<String, KeyGenerator> keyGeneratorMap = beanFactory.getBeansOfType(KeyGenerator.class);
         cacheManager.setKeyGeneratorMap(keyGeneratorMap);
@@ -294,31 +295,32 @@ public class CacheBeanDefinitionRegistryProcessor implements BeanDefinitionRegis
         cacheManager.setShardingCache(shardingCache);
 
         // cache operations
-        Map<String, AbstractCacheConfig> cacheOperationMap = beanFactory.getBeansOfType(AbstractCacheConfig.class);
-        Map<String, EvictionConfig> evictionOperationMap = beanFactory.getBeansOfType(EvictionConfig.class);
+        Map<String, AbstractCacheProperties> cachePropertiesMap = beanFactory.getBeansOfType(AbstractCacheProperties.class);
+        Map<String, EvictionProperties> evictionPropertiesMap = beanFactory.getBeansOfType(EvictionProperties.class);
 
         // register cache stats listeners
         if (CacheManager.Config.metricsEnabled) {
 
-            Map<String, CacheStatsListener> statsListenerMap = beanFactory.getBeansOfType(CacheStatsListener.class);
+            Map<String, CacheMetricsListener> statsListenerMap = beanFactory.getBeansOfType(CacheMetricsListener.class);
             cacheManager.setStatsListenerMap(statsListenerMap);
 
-            for (AbstractCacheConfig cacheOperation : cacheOperationMap.values()) {
-                for (CacheStatsListener<CacheEvent> statsListener : statsListenerMap.values()) {
-                    cacheOperation.getCacheEventCollector().register(statsListener);
+            for (AbstractCacheProperties cacheProperties : cachePropertiesMap.values()) {
+                for (CacheMetricsListener<CacheEvent> statsListener : statsListenerMap.values()) {
+                    cacheProperties.getCacheEventCollector().register(statsListener);
                 }
             }
 
-            for (EvictionConfig evictionOperation : evictionOperationMap.values()) {
-                for (CacheStatsListener<CacheEvent> statsListener : statsListenerMap.values()) {
-                    evictionOperation.getCacheEventCollector().register(statsListener);
+            for (EvictionProperties evictionProperties : evictionPropertiesMap.values()) {
+                for (CacheMetricsListener<CacheEvent> statsListener : statsListenerMap.values()) {
+                    evictionProperties.getCacheEventCollector().register(statsListener);
                 }
             }
         }
 
-        cacheManager.setCacheOperationMap(cacheOperationMap);
-        cacheManager.setEvictionOperationMap(evictionOperationMap);
+        cacheManager.setCachePropertiesMap(cachePropertiesMap);
+        cacheManager.setEvictionPropertiesMap(evictionPropertiesMap);
 
+        // 将cache manager交由spring托管
         beanFactory.registerSingleton(CacheManager.INTERNAL_CACHE_MANAGER_BEAN_NAME, cacheManager);
 
         cacheManager.initialized();
@@ -327,5 +329,21 @@ public class CacheBeanDefinitionRegistryProcessor implements BeanDefinitionRegis
                         cacheManager.initializedInfo());
 
         InvocationInterceptor.init(cacheManager);
+    }
+
+    private Object chooseValueSerializer(String userValueSerializer, Type cacheEntityType) {
+        Object valueSerializer;
+        if (CommonUtils.isEmpty(userValueSerializer)) {
+            valueSerializer = internalValueSerializers.compute(cacheEntityType.getTypeName(), (key, internalObjectValueSerializer) -> {
+                if (internalObjectValueSerializer == null) {
+                    internalObjectValueSerializer = new InternalObjectValueSerializer<>(cacheEntityType);
+                    internalValueSerializers.put(key, internalObjectValueSerializer);
+                }
+                return internalObjectValueSerializer;
+            });
+        } else {
+            valueSerializer = new RuntimeBeanReference(userValueSerializer);
+        }
+        return valueSerializer;
     }
 }

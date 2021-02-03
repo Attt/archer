@@ -25,7 +25,7 @@ public class CacheResolver implements AnnotationResolver<Cache, List<ObjectCache
                 annotation.key(),
                 annotation.condition(),
                 chooseValue(classCacheMetadata.getKeyGenerator(), annotation.keyGenerator()),
-                chooseValue(classCacheMetadata.getArea(), annotation.region())
+                chooseValue(classCacheMetadata.getRegion(), annotation.region())
         );
 
         metadata.setInvokeAnyway(annotation.overwrite());

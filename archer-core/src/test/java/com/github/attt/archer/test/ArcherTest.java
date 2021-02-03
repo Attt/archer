@@ -2,7 +2,7 @@ package com.github.attt.archer.test;
 
 import com.github.attt.archer.Archer;
 import com.github.attt.archer.cache.Cache;
-import com.github.attt.archer.components.preset.KryoObjectSerializer;
+import com.github.attt.archer.cache.preset.KryoObjectSerializer;
 import com.github.attt.archer.constants.Serialization;
 import com.github.attt.archer.expression.CacheExpressionUtilObject;
 import com.github.attt.archer.test.components.AllCacheEventListener;

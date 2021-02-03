@@ -1,6 +1,6 @@
 package com.github.attt.archer.cache;
 
-import com.github.attt.archer.stats.api.CacheEventCollector;
+import com.github.attt.archer.metrics.api.CacheEventCollector;
 
 import java.io.Serializable;
 import java.util.Collection;
@@ -32,124 +32,124 @@ public interface Cache {
     /**
      * 指定的key是否命中缓存
      *
-     * @param area region
+     * @param region region
      * @param key 缓存key
      * @param collector 事件收集器
      * @return
      */
-    boolean containsKey(String area, String key, CacheEventCollector collector);
+    boolean containsKey(String region, String key, CacheEventCollector collector);
 
     /**
      * 获取缓存
      *
-     * @param area region
+     * @param region region
      * @param key 缓存key
      * @param collector 事件收集器
      * @return 缓存内容，未命中为null
      */
-    Entry get(String area, String key, CacheEventCollector collector);
+    Entry get(String region, String key, CacheEventCollector collector);
 
     /**
      * 批量获取缓存
      *
      * @see #get(String, String, CacheEventCollector)
-     * @param area region
+     * @param region region
      * @param keys 缓存key集合
      * @param collector 事件收集器
      * @return 缓存key 与 {@link Entry}包装过的缓存内容映射 ，忽略未命中的缓存
      */
-    Map<String, Entry> getAll(String area, Collection<String> keys, CacheEventCollector collector);
+    Map<String, Entry> getAll(String region, Collection<String> keys, CacheEventCollector collector);
 
     /**
      * 根据指定key缓存value，如果存在就替换
      *
-     * @param area region
+     * @param region region
      * @param key 缓存key
      * @param value 缓存内容
      * @param collector 事件收集器
      */
-    void put(String area, String key, Entry value, CacheEventCollector collector);
+    void put(String region, String key, Entry value, CacheEventCollector collector);
 
     /**
      * 批量缓存value
      *
      * @see #put(String, String, Entry, CacheEventCollector)
-     * @param area region
+     * @param region region
      * @param map 缓存key与缓存内容的映射
      * @param collector 事件收集器
      */
-    void putAll(String area, Map<String, Entry> map, CacheEventCollector collector);
+    void putAll(String region, Map<String, Entry> map, CacheEventCollector collector);
 
     /**
      * 根据指定key缓存value，如果存在忽略
      *
-     * @param area region
+     * @param region region
      * @param key 缓存key
      * @param value 缓存内容
      * @param collector 事件收集器
      */
-    void putIfAbsent(String area, String key, Entry value, CacheEventCollector collector);
+    void putIfAbsent(String region, String key, Entry value, CacheEventCollector collector);
 
     /**
      * 批量缓存value
      *
      * @see #putIfAbsent(String, String, Entry, CacheEventCollector)
-     * @param area region
+     * @param region region
      * @param map 缓存key与缓存内容的映射
      * @param collector 事件收集器
      */
-    void putAllIfAbsent(String area, Map<String, Entry> map, CacheEventCollector collector);
+    void putAllIfAbsent(String region, Map<String, Entry> map, CacheEventCollector collector);
 
     /**
      * 删除key对应的缓存内容
      *
-     * @param area region
+     * @param region region
      * @param key 缓存key
      * @param collector 事件收集器
      * @return 是否成功删除
      */
-    boolean remove(String area, String key, CacheEventCollector collector);
+    boolean remove(String region, String key, CacheEventCollector collector);
 
     /**
      * 批量删除key对应的缓存内容
      *
-     * @param area region
+     * @param region region
      * @param keys 缓存key集合
      * @param collector 事件收集器
      * @return 是否成功删除
      */
-    boolean removeAll(String area, Collection<String> keys, CacheEventCollector collector);
+    boolean removeAll(String region, Collection<String> keys, CacheEventCollector collector);
 
     /**
      * 批量删除area中所有的缓存内容
      *
-     * @param area region
+     * @param region region
      * @param collector 事件收集器
      * @return 是否成功删除
      */
-    boolean removeAll(String area, CacheEventCollector collector);
+    boolean removeAll(String region, CacheEventCollector collector);
 
     /**
      * 保存region（原area）中所有的缓存key的集合或列表的key
      *
-     * @param area region
+     * @param region region
      * @return 默认是region + ～keys
      */
-    default String areaKeysSetKey(String area) {
-        return area + DEFAULT_KEYS_SUFFIX;
+    default String areaKeysSetKey(String region) {
+        return region + DEFAULT_KEYS_SUFFIX;
     }
 
 
     /**
      * 用于包装缓存的region、key、value和ttl超时时间
      *
-     * @param area region
+     * @param region region
      * @param key 缓存key
      * @param value 缓存内容
      * @param ttl 超时时间（毫秒）
      * @return 包装后的缓存内容
      */
-    default Entry wrap(String area, String key, byte[] value, long ttl) {
+    default Entry wrap(String region, String key, byte[] value, long ttl) {
         return new DefaultEntry(key, value, ttl);
     }
 

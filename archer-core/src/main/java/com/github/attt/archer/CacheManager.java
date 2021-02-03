@@ -1,21 +1,21 @@
 package com.github.attt.archer;
 
 import com.github.attt.archer.cache.ShardingCache;
-import com.github.attt.archer.components.api.KeyGenerator;
-import com.github.attt.archer.components.api.Serializer;
+import com.github.attt.archer.cache.KeyGenerator;
+import com.github.attt.archer.cache.Serializer;
 import com.github.attt.archer.constants.Serialization;
 import com.github.attt.archer.exception.CacheOperationException;
 import com.github.attt.archer.expression.CacheExpressionUtilObject;
 import com.github.attt.archer.annotation.metadata.CacheMetadata;
-import com.github.attt.archer.annotation.config.AbstractCacheConfig;
-import com.github.attt.archer.annotation.config.EvictionConfig;
+import com.github.attt.archer.annotation.config.AbstractCacheProperties;
+import com.github.attt.archer.annotation.config.EvictionProperties;
 import com.github.attt.archer.invoker.ListCacheInvoker;
 import com.github.attt.archer.invoker.CacheInvoker;
 import com.github.attt.archer.invoker.AbstractInvoker;
 import com.github.attt.archer.roots.Component;
 import com.github.attt.archer.roots.ListComponent;
 import com.github.attt.archer.roots.ObjectComponent;
-import com.github.attt.archer.stats.api.listener.CacheStatsListener;
+import com.github.attt.archer.metrics.api.listener.CacheMetricsListener;
 import com.github.attt.archer.util.CommonUtils;
 import com.github.attt.archer.util.SpringElUtil;
 
@@ -42,7 +42,7 @@ public class CacheManager implements Component {
     }
 
     /**
-     * Sharding cache operation
+     * Sharding cache
      */
     private ShardingCache shardingCache;
 
@@ -57,30 +57,30 @@ public class CacheManager implements Component {
     private Map<String, Serializer> serializerMap = new ConcurrentHashMap<>();
 
     /**
-     * Manage all cache acceptation operation sources
+     * Manage all cache cache properties
      */
-    private Map<String, AbstractCacheConfig> cacheOperationMap = new ConcurrentHashMap<>();
+    private Map<String, AbstractCacheProperties> cachePropertiesMap = new ConcurrentHashMap<>();
 
 
     /**
-     * Manage all cache eviction operation sources
+     * Manage all cache eviction cache properties
      */
-    private Map<String, EvictionConfig> evictionOperationMap = new ConcurrentHashMap<>();
+    private Map<String, EvictionProperties> evictionPropertiesMap = new ConcurrentHashMap<>();
 
     /**
-     * Manage all method mapping to operation source name
+     * Manage all method mapping to cache properties name
      */
-    private Map<String, List<String>> methodSignatureToOperationSourceName = new ConcurrentHashMap<>();
+    private Map<String, List<String>> methodSignatureToPropertiesName = new ConcurrentHashMap<>();
 
     /**
      * Manage all processors
      */
-    private Map<String, AbstractInvoker> processors = new ConcurrentHashMap<>();
+    private Map<String, AbstractInvoker> invokersMap = new ConcurrentHashMap<>();
 
     /**
      * Manage all cache stats listeners
      */
-    private Map<String, CacheStatsListener> statsListenerMap = new ConcurrentHashMap<>();
+    private Map<String, CacheMetricsListener> statsListenerMap = new ConcurrentHashMap<>();
 
 
     public ShardingCache getShardingCache() {
@@ -91,28 +91,28 @@ public class CacheManager implements Component {
         this.shardingCache = shardingCache;
     }
 
-    public Map<String, AbstractCacheConfig> getCacheOperationMap() {
-        return cacheOperationMap;
+    public Map<String, AbstractCacheProperties> getCachePropertiesMap() {
+        return cachePropertiesMap;
     }
 
-    public void setCacheOperationMap(Map<String, AbstractCacheConfig> cacheOperationMap) {
-        this.cacheOperationMap = cacheOperationMap;
+    public void setCachePropertiesMap(Map<String, AbstractCacheProperties> cachePropertiesMap) {
+        this.cachePropertiesMap = cachePropertiesMap;
     }
 
-    public Map<String, EvictionConfig> getEvictionOperationMap() {
-        return evictionOperationMap;
+    public Map<String, EvictionProperties> getEvictionPropertiesMap() {
+        return evictionPropertiesMap;
     }
 
-    public void setEvictionOperationMap(Map<String, EvictionConfig> evictionOperationMap) {
-        this.evictionOperationMap = evictionOperationMap;
+    public void setEvictionPropertiesMap(Map<String, EvictionProperties> evictionPropertiesMap) {
+        this.evictionPropertiesMap = evictionPropertiesMap;
     }
 
-    public Map<String, List<String>> getMethodSignatureToOperationSourceName() {
-        return methodSignatureToOperationSourceName;
+    public Map<String, List<String>> getMethodSignatureToPropertiesName() {
+        return methodSignatureToPropertiesName;
     }
 
-    public void setMethodSignatureToOperationSourceName(Map<String, List<String>> methodSignatureToOperationSourceName) {
-        this.methodSignatureToOperationSourceName = methodSignatureToOperationSourceName;
+    public void setMethodSignatureToPropertiesName(Map<String, List<String>> methodSignatureToPropertiesName) {
+        this.methodSignatureToPropertiesName = methodSignatureToPropertiesName;
     }
 
 
@@ -132,33 +132,33 @@ public class CacheManager implements Component {
         this.serializerMap = serializerMap;
     }
 
-    public Map<String, CacheStatsListener> getStatsListenerMap() {
+    public Map<String, CacheMetricsListener> getStatsListenerMap() {
         return statsListenerMap;
     }
 
-    public void setStatsListenerMap(Map<String, CacheStatsListener> statsListenerMap) {
+    public void setStatsListenerMap(Map<String, CacheMetricsListener> statsListenerMap) {
         this.statsListenerMap = statsListenerMap;
     }
 
     /**
-     * Get acceptation operations by method signature and source type
+     * Get cache properties by method signature and properties type
      *
      * @param methodSignature
-     * @param sourceType
+     * @param propertiesType
      * @param <T>
      * @return
      */
-    public <T extends AbstractCacheConfig> List<T> getCacheOperations(String methodSignature, Class<T> sourceType) {
-        List<String> configNames = methodSignatureToOperationSourceName.getOrDefault(methodSignature, null);
+    public <T extends AbstractCacheProperties> List<T> getCacheProperties(String methodSignature, Class<T> propertiesType) {
+        List<String> configNames = methodSignatureToPropertiesName.getOrDefault(methodSignature, null);
 
         List<T> sources = new ArrayList<>();
         if (!CommonUtils.isEmpty(configNames)) {
             for (String configName : configNames) {
-                AbstractCacheConfig<CacheMetadata, Object> cacheOperation = cacheOperationMap.getOrDefault(configName, null);
-                if (cacheOperation == null || !sourceType.isAssignableFrom(cacheOperation.getClass())) {
+                AbstractCacheProperties<CacheMetadata, Object> cacheProperties = cachePropertiesMap.getOrDefault(configName, null);
+                if (cacheProperties == null || !propertiesType.isAssignableFrom(cacheProperties.getClass())) {
                     continue;
                 }
-                sources.add((T) cacheOperation);
+                sources.add((T) cacheProperties);
             }
 
         }
@@ -166,22 +166,22 @@ public class CacheManager implements Component {
     }
 
     /**
-     * Get eviction operation sources by method signature
+     * Get eviction properties by method signature
      *
      * @param methodSignature
      * @return
      */
-    public List<EvictionConfig> getEvictionOperations(String methodSignature) {
-        List<String> configNames = methodSignatureToOperationSourceName.getOrDefault(methodSignature, null);
+    public List<EvictionProperties> getEvictionProperties(String methodSignature) {
+        List<String> configNames = methodSignatureToPropertiesName.getOrDefault(methodSignature, null);
 
-        List<EvictionConfig> evictionConfigs = new ArrayList<>();
+        List<EvictionProperties> evictionConfigs = new ArrayList<>();
         if (!CommonUtils.isEmpty(configNames)) {
             for (String configName : configNames) {
-                EvictionConfig evictionOperation = evictionOperationMap.getOrDefault(configName, null);
-                if (evictionOperation == null) {
+                EvictionProperties evictionProperties = evictionPropertiesMap.getOrDefault(configName, null);
+                if (evictionProperties == null) {
                     continue;
                 }
-                evictionConfigs.add(evictionOperation);
+                evictionConfigs.add(evictionProperties);
             }
 
         }
@@ -193,32 +193,32 @@ public class CacheManager implements Component {
      *
      * @return
      */
-    public Collection<AbstractInvoker> getProcessors(){
-        return processors.values();
+    public Collection<AbstractInvoker> getInvokers(){
+        return invokersMap.values();
     }
 
     /**
-     * Get cache processor which matches operation source
+     * Get cache invoker which matches cache properties
      *
-     * @param cacheOperation
+     * @param cacheProperties
      * @return
      */
-    public AbstractInvoker getProcessor(AbstractCacheConfig cacheOperation) {
+    public AbstractInvoker getProcessor(AbstractCacheProperties cacheProperties) {
         List<String> componentInterfaces = new ArrayList<>();
-        Class<?>[] interfaces = cacheOperation.getClass().getInterfaces();
+        Class<?>[] interfaces = cacheProperties.getClass().getInterfaces();
         for (Class<?> ifc : interfaces) {
             if (Component.class.isAssignableFrom(ifc)) {
                 componentInterfaces.add(ifc.toString());
             }
         }
         for (String componentInterface : componentInterfaces) {
-            if (processors.containsKey(componentInterface)) {
-                return processors.get(componentInterface);
+            if (invokersMap.containsKey(componentInterface)) {
+                return invokersMap.get(componentInterface);
             }
         }
 
 
-        throw new CacheOperationException("Illegal cache operation type " + cacheOperation.getClass().getName());
+        throw new CacheOperationException("Illegal cache properties provided. " + cacheProperties.getClass().getName());
     }
 
     /**
@@ -229,7 +229,7 @@ public class CacheManager implements Component {
      * @return
      */
     public <C extends Component> AbstractInvoker getProcessor(Class<C> type) {
-        return processors.getOrDefault(type.toString(), null);
+        return invokersMap.getOrDefault(type.toString(), null);
     }
 
     @Override
@@ -244,17 +244,17 @@ public class CacheManager implements Component {
 
         ListCacheInvoker<?> listServiceCacheProcessor = new ListCacheInvoker<>();
         listServiceCacheProcessor.afterInitialized(this);
-        processors.put(ListComponent.class.toString(), listServiceCacheProcessor);
+        invokersMap.put(ListComponent.class.toString(), listServiceCacheProcessor);
 
         CacheInvoker<?> objectServiceCacheProcessor = new CacheInvoker<>();
         objectServiceCacheProcessor.afterInitialized(this);
-        processors.put(ObjectComponent.class.toString(), objectServiceCacheProcessor);
+        invokersMap.put(ObjectComponent.class.toString(), objectServiceCacheProcessor);
     }
 
     @Override
     public String initializedInfo() {
-        return "\r\n" + "cache operations : " + cacheOperationMap.size() + "\r\n"
-                + "eviction operations : " + evictionOperationMap.size() + "\r\n"
-                + "processors : \r\n" + processors + "\r\n";
+        return "\r\n" + "cache properties : " + cachePropertiesMap.size() + "\r\n"
+                + "eviction properties : " + evictionPropertiesMap.size() + "\r\n"
+                + "processors : \r\n" + invokersMap + "\r\n";
     }
 }

@@ -25,11 +25,11 @@ public final class CaffeineCacheFactory implements CacheFactory {
         shardCount++;
         if (isCaffeineShard(config)) {
 
-            CaffeineCache operation = new CaffeineCache();
+            CaffeineCache cache = new CaffeineCache();
 
             // init method should be invoked at last
-            operation.init(config);
-            return operation;
+            cache.init(config);
+            return cache;
         }
         return null;
     }
@@ -41,10 +41,5 @@ public final class CaffeineCacheFactory implements CacheFactory {
     @Override
     public boolean enabled() {
         return true;
-    }
-
-    @Override
-    public int priority() {
-        return Integer.MAX_VALUE;
     }
 }

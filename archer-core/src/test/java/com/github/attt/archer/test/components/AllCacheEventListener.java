@@ -1,8 +1,8 @@
 package com.github.attt.archer.test.components;
 
-import com.github.attt.archer.stats.api.CacheEvent;
-import com.github.attt.archer.stats.api.listener.CacheStatsListener;
-import com.github.attt.archer.stats.event.CacheTimeElapsingEvent;
+import com.github.attt.archer.metrics.api.CacheEvent;
+import com.github.attt.archer.metrics.api.listener.CacheMetricsListener;
+import com.github.attt.archer.metrics.event.CacheTimeElapsingEvent;
 
 import java.util.function.Predicate;
 
@@ -10,7 +10,7 @@ import java.util.function.Predicate;
  * @author: atpex
  * @since 1.0
  */
-public class AllCacheEventListener implements CacheStatsListener<CacheEvent> {
+public class AllCacheEventListener implements CacheMetricsListener<CacheEvent> {
 
     @Override
     public void onEvent(String name, CacheEvent event) {
@@ -27,7 +27,7 @@ public class AllCacheEventListener implements CacheStatsListener<CacheEvent> {
     }
 
     @Override
-    public int compareTo(CacheStatsListener<CacheEvent> o) {
+    public int compareTo(CacheMetricsListener<CacheEvent> o) {
         return 0;
     }
 }

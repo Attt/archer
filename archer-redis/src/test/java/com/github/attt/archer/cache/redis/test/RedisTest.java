@@ -3,11 +3,11 @@ package com.github.attt.archer.cache.redis.test;
 import com.github.attt.archer.cache.Cache;
 import com.github.attt.archer.cache.redis.RedisCache;
 import com.github.attt.archer.cache.redis.RedisShard;
-import com.github.attt.archer.components.internal.InternalKeySerializer;
-import com.github.attt.archer.components.internal.InternalObjectValueSerializer;
-import com.github.attt.archer.stats.api.CacheEvent;
-import com.github.attt.archer.stats.api.CacheEventCollector;
-import com.github.attt.archer.stats.api.listener.CacheStatsListener;
+import com.github.attt.archer.cache.internal.InternalKeySerializer;
+import com.github.attt.archer.cache.internal.InternalObjectValueSerializer;
+import com.github.attt.archer.metrics.api.CacheEvent;
+import com.github.attt.archer.metrics.api.CacheEventCollector;
+import com.github.attt.archer.metrics.api.listener.CacheMetricsListener;
 import org.junit.jupiter.api.Test;
 
 /**
@@ -18,7 +18,7 @@ public class RedisTest {
 
     private static final CacheEventCollector dummyCollector = new CacheEventCollector() {
         @Override
-        public void register(CacheStatsListener<CacheEvent> listener) {
+        public void register(CacheMetricsListener<CacheEvent> listener) {
 
         }
 

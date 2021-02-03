@@ -5,19 +5,18 @@ import com.github.attt.archer.annotation.Cache;
 import com.github.attt.archer.annotation.CacheList;
 import com.github.attt.archer.annotation.Protection;
 import com.github.attt.archer.cache.ShardingCache;
-import com.github.attt.archer.components.internal.InternalElementKeyGenerator;
-import com.github.attt.archer.components.internal.InternalKeyGenerator;
+import com.github.attt.archer.cache.internal.InternalElementKeyGenerator;
+import com.github.attt.archer.cache.internal.InternalKeyGenerator;
 import com.github.attt.archer.annotation.metadata.CacheMetadata;
 import com.github.attt.archer.annotation.metadata.AbstractCacheMetadata;
-import com.github.attt.archer.annotation.config.EvictionConfig;
-import com.github.attt.archer.annotation.config.AbstractCacheConfig;
+import com.github.attt.archer.annotation.config.EvictionProperties;
+import com.github.attt.archer.annotation.config.AbstractCacheProperties;
 import com.github.attt.archer.invoker.context.InvocationContext;
-import com.github.attt.archer.invoker.extra.ManualInvoker;
-import com.github.attt.archer.stats.api.CacheEvent;
-import com.github.attt.archer.stats.api.CacheEventCollector;
-import com.github.attt.archer.stats.api.listener.CacheStatsListener;
-import com.github.attt.archer.stats.collector.NamedCacheEventCollector;
-import com.github.attt.archer.stats.event.CacheBreakdownProtectedEvent;
+import com.github.attt.archer.metrics.api.CacheEvent;
+import com.github.attt.archer.metrics.api.CacheEventCollector;
+import com.github.attt.archer.metrics.api.listener.CacheMetricsListener;
+import com.github.attt.archer.metrics.collector.NamedCacheEventCollector;
+import com.github.attt.archer.metrics.event.CacheBreakdownProtectedEvent;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -40,7 +39,7 @@ import static com.github.attt.archer.constants.Constants.DEFAULT_DELIMITER;
  * @author atpexgo.wu
  * @since 1.0
  */
-public abstract class AbstractInvoker<C extends AbstractCacheConfig<?, V>, V> implements Invoker<InvocationContext, C, EvictionConfig, V>, ManualInvoker {
+public abstract class AbstractInvoker<C extends AbstractCacheProperties<?, V>, V> implements Invoker<InvocationContext, C, EvictionProperties, V>, ManualInvoker {
 
     private final static Logger logger = LoggerFactory.getLogger(AbstractInvoker.class);
 
@@ -73,22 +72,22 @@ public abstract class AbstractInvoker<C extends AbstractCacheConfig<?, V>, V> im
     }
 
     @Override
-    public void delete(InvocationContext context, EvictionConfig cacheOperation) {
-        cache.remove(cacheOperation.getMetadata().getArea(), generateCacheKey(context, cacheOperation.getMetadata()), cacheOperation.getCacheEventCollector());
+    public void delete(InvocationContext context, EvictionProperties evictionProperties) {
+        cache.remove(evictionProperties.getMetadata().getRegion(), generateCacheKey(context, evictionProperties.getMetadata()), evictionProperties.getCacheEventCollector());
     }
 
     @Override
-    public void deleteAll(List<InvocationContext> contextList, EvictionConfig cacheOperation) {
+    public void deleteAll(List<InvocationContext> contextList, EvictionProperties evictionProperties) {
         List<String> keys = new ArrayList<>();
         for (InvocationContext context : contextList) {
-            keys.add(generateCacheKey(context, cacheOperation.getMetadata()));
+            keys.add(generateCacheKey(context, evictionProperties.getMetadata()));
         }
-        cache.removeAll(cacheOperation.getMetadata().getArea(), keys, cacheOperation.getCacheEventCollector());
+        cache.removeAll(evictionProperties.getMetadata().getRegion(), keys, evictionProperties.getCacheEventCollector());
     }
 
     @Override
-    public void deleteAll(EvictionConfig cacheOperation) {
-        cache.removeAll(cacheOperation.getMetadata().getArea(), cacheOperation.getCacheEventCollector());
+    public void deleteAll(EvictionProperties evictionProperties) {
+        cache.removeAll(evictionProperties.getMetadata().getRegion(), evictionProperties.getCacheEventCollector());
     }
 
     @Override
@@ -136,38 +135,38 @@ public abstract class AbstractInvoker<C extends AbstractCacheConfig<?, V>, V> im
      * @see CacheList
      * @see Cache
      */
-    protected V loadAndPut(InvocationContext context, C cacheOperation) {
-        CacheMetadata cacheMetadata = cacheOperation.getMetadata();
+    protected V loadAndPut(InvocationContext context, C cacheProperties) {
+        CacheMetadata cacheMetadata = cacheProperties.getMetadata();
         logger.debug("Cache miss");
         if (cacheMetadata.getBreakdownProtect()) {
             logger.debug("Breakdown protect is on, loadAndPut synchronized");
             // synchronized loadAndPut
-            return synchronizedLoadAndPut(context, cacheOperation);
+            return synchronizedLoadAndPut(context, cacheProperties);
         } else {
             logger.debug("Breakdown protect is off, loadAndPut");
             // loadAndPut
-            return loadAndPut0(context, cacheOperation);
+            return loadAndPut0(context, cacheProperties);
         }
     }
 
-    private V loadAndPut0(InvocationContext context, C cacheOperation) {
-        V load = load(context, cacheOperation);
-        put(context, load, cacheOperation);
+    private V loadAndPut0(InvocationContext context, C cacheProperties) {
+        V load = load(context, cacheProperties);
+        put(context, load, cacheProperties);
         return load;
     }
 
-    private V load(InvocationContext context, C cacheOperation) {
-        return cacheOperation.getLoader().load(context);
+    private V load(InvocationContext context, C cacheProperties) {
+        return cacheProperties.getLoader().load(context);
     }
 
 
-    private V synchronizedLoadAndPut(InvocationContext context, C cacheOperation) {
-        return doSynchronizedLoadAndPut(generateLockKey(context, cacheOperation.getMetadata()),
-                cacheOperation.getMetadata().getBreakdownProtectTimeoutInMillis(),
-                () -> load(context, cacheOperation),
-                v -> put(context, v, cacheOperation),
-                () -> loadAndPut0(context, cacheOperation),
-                cacheOperation.getCacheEventCollector());
+    private V synchronizedLoadAndPut(InvocationContext context, C cacheProperties) {
+        return doSynchronizedLoadAndPut(generateLockKey(context, cacheProperties.getMetadata()),
+                cacheProperties.getMetadata().getBreakdownProtectTimeoutInMillis(),
+                () -> load(context, cacheProperties),
+                v -> put(context, v, cacheProperties),
+                () -> loadAndPut0(context, cacheProperties),
+                cacheProperties.getCacheEventCollector());
     }
 
     private <V0> V0 doSynchronizedLoadAndPut(String lockKey, long breakdownTimeout, Supplier<V0> load, Consumer<V0> put, Supplier<V0> loadAndPut, CacheEventCollector cacheEventCollector) {
@@ -219,46 +218,46 @@ public abstract class AbstractInvoker<C extends AbstractCacheConfig<?, V>, V> im
         }
     }
 
-    protected Map<InvocationContext, V> loadAndPutAll(List<InvocationContext> contextList, C cacheOperation) {
-        CacheMetadata metadata = cacheOperation.getMetadata();
+    protected Map<InvocationContext, V> loadAndPutAll(List<InvocationContext> contextList, C cacheProperties) {
+        CacheMetadata metadata = cacheProperties.getMetadata();
         logger.debug("Cache miss");
         if (metadata.getBreakdownProtect()) {
             logger.debug("Breakdown protect is on, loadAndPutAll synchronized");
             // synchronized loadAndPut
-            return synchronizedLoadAndPutAll(contextList, cacheOperation);
+            return synchronizedLoadAndPutAll(contextList, cacheProperties);
         } else {
             logger.debug("Breakdown protect is off, loadAndPutAll");
             // loadAndPut
-            return loadAndPutAll0(contextList, cacheOperation);
+            return loadAndPutAll0(contextList, cacheProperties);
         }
     }
 
-    private Map<InvocationContext, V> loadAll(List<InvocationContext> contexts, C cacheOperation) {
+    private Map<InvocationContext, V> loadAll(List<InvocationContext> contexts, C cacheProperties) {
         // actually single loader and multiple loader won't be set at the same time
         // but in case, use multiple loader first
-        if (cacheOperation.getMultipleLoader() != null) {
-            return cacheOperation.getMultipleLoader().load(contexts);
+        if (cacheProperties.getMultipleLoader() != null) {
+            return cacheProperties.getMultipleLoader().load(contexts);
         }
         Map<InvocationContext, V> result = new HashMap<>(contexts.size());
         for (InvocationContext context : contexts) {
-            result.put(context, cacheOperation.getLoader().load(context));
+            result.put(context, cacheProperties.getLoader().load(context));
         }
         return result;
     }
 
-    private Map<InvocationContext, V> loadAndPutAll0(List<InvocationContext> contexts, C cacheOperation) {
-        Map<InvocationContext, V> load = loadAll(contexts, cacheOperation);
-        putAll(load, cacheOperation);
+    private Map<InvocationContext, V> loadAndPutAll0(List<InvocationContext> contexts, C cacheProperties) {
+        Map<InvocationContext, V> load = loadAll(contexts, cacheProperties);
+        putAll(load, cacheProperties);
         return load;
     }
 
-    private Map<InvocationContext, V> synchronizedLoadAndPutAll(List<InvocationContext> contexts, C cacheOperation) {
-        return doSynchronizedLoadAndPut(generateLockKey(contexts, cacheOperation.getMetadata()),
-                cacheOperation.getMetadata().getBreakdownProtectTimeoutInMillis(),
-                () -> loadAll(contexts, cacheOperation),
-                v -> putAll(v, cacheOperation),
-                () -> loadAndPutAll0(contexts, cacheOperation),
-                cacheOperation.getCacheEventCollector());
+    private Map<InvocationContext, V> synchronizedLoadAndPutAll(List<InvocationContext> contexts, C cacheProperties) {
+        return doSynchronizedLoadAndPut(generateLockKey(contexts, cacheProperties.getMetadata()),
+                cacheProperties.getMetadata().getBreakdownProtectTimeoutInMillis(),
+                () -> loadAll(contexts, cacheProperties),
+                v -> putAll(v, cacheProperties),
+                () -> loadAndPutAll0(contexts, cacheProperties),
+                cacheProperties.getCacheEventCollector());
     }
 
 
@@ -275,7 +274,7 @@ public abstract class AbstractInvoker<C extends AbstractCacheConfig<?, V>, V> im
     }
 
     public void afterInitialized(CacheManager cacheManager) {
-        for (CacheStatsListener<CacheEvent> statsListener : cacheManager.getStatsListenerMap().values()) {
+        for (CacheMetricsListener<CacheEvent> statsListener : cacheManager.getStatsListenerMap().values()) {
             manualCacheEventCollector.register(statsListener);
         }
         cache = cacheManager.getShardingCache();

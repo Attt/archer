@@ -20,8 +20,8 @@ public class EvictResolver implements AnnotationResolver<CacheEvict, List<Evicti
 
         String[] areas = new String[0];
         if (annotation.regions().length == 0) {
-            if (classCacheMetadata.getArea() != null) {
-                areas = new String[]{classCacheMetadata.getArea()};
+            if (classCacheMetadata.getRegion() != null) {
+                areas = new String[]{classCacheMetadata.getRegion()};
             }
         } else {
             areas = annotation.regions();

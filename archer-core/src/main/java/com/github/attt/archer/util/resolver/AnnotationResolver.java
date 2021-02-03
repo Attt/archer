@@ -44,7 +44,7 @@ public interface AnnotationResolver<T extends Annotation, R extends List<? exten
         metadata.setCondition(condition);
         metadata.setKeyGenerator(keyGenerator);
         metadata.setMethodSignature(ReflectionUtil.getSignature(method));
-        metadata.setArea(area);
+        metadata.setRegion(area);
     }
 
     /**

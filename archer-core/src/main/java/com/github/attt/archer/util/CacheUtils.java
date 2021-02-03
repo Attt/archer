@@ -84,7 +84,7 @@ public class CacheUtils {
         classCacheMetadata.setKeyGenerator(
                 CommonUtils.escapeNullable(archerCache, () -> archerCache.keyGenerator(), "")
         );
-        classCacheMetadata.setArea(
+        classCacheMetadata.setRegion(
                 CommonUtils.escapeNullable(archerCache, () -> archerCache.region(), "")
         );
 

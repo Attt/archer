@@ -1,10 +1,10 @@
 package com.github.attt.archer.util;
 
 import com.github.attt.archer.CacheManager;
-import com.github.attt.archer.components.api.KeyGenerator;
-import com.github.attt.archer.components.api.Serializer;
-import com.github.attt.archer.annotation.config.AbstractCacheConfig;
-import com.github.attt.archer.annotation.config.EvictionConfig;
+import com.github.attt.archer.cache.KeyGenerator;
+import com.github.attt.archer.cache.Serializer;
+import com.github.attt.archer.annotation.config.AbstractCacheProperties;
+import com.github.attt.archer.annotation.config.EvictionProperties;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -35,17 +35,17 @@ public class InfoPrinter {
      * @param cacheManager
      */
     public static void printComponentUsageInfo(CacheManager cacheManager) {
-        Map<String, EvictionConfig> evictionConfigMap = cacheManager.getEvictionOperationMap();
-        Map<String, AbstractCacheConfig> acceptationConfigMap = cacheManager.getCacheOperationMap();
+        Map<String, EvictionProperties> evictionConfigMap = cacheManager.getEvictionPropertiesMap();
+        Map<String, AbstractCacheProperties> acceptationConfigMap = cacheManager.getCachePropertiesMap();
         Map<String, KeyGenerator> keyGeneratorMap = cacheManager.getKeyGeneratorMap();
         Map<String, Serializer> serializerMap = cacheManager.getSerializerMap();
-        Map<String, List<String>> methodSignatureToOperationSourceName = cacheManager.getMethodSignatureToOperationSourceName();
+        Map<String, List<String>> methodSignatureToPropertiesName = cacheManager.getMethodSignatureToPropertiesName();
 
         String evictionConfigInfo = generateTableWithLastColumnBorderless("eviction operations", Collections.singletonList("bean"), evictionConfigMap.keySet().stream().map(Collections::singletonList).collect(Collectors.toList()), 50);
         String acceptationConfigInfo = generateTableWithLastColumnBorderless("cache operations", Collections.singletonList("bean"), acceptationConfigMap.keySet().stream().map(Collections::singletonList).collect(Collectors.toList()), 50);
         String keyGeneratorInfo = generateTableWithLastColumnBorderless("key generators", Collections.singletonList("bean"), keyGeneratorMap.keySet().stream().map(Collections::singletonList).collect(Collectors.toList()), 50);
         String serializerInfo = generateTableWithLastColumnBorderless("serializers", Collections.singletonList("bean"), serializerMap.keySet().stream().map(Collections::singletonList).collect(Collectors.toList()), 50);
-        String methodsInfo = generateTableWithLastColumnBorderless("proxied methods", Collections.singletonList("methods"), methodSignatureToOperationSourceName.keySet().stream().map(Collections::singletonList).collect(Collectors.toList()), 50);
+        String methodsInfo = generateTableWithLastColumnBorderless("proxied methods", Collections.singletonList("methods"), methodSignatureToPropertiesName.keySet().stream().map(Collections::singletonList).collect(Collectors.toList()), 50);
 
         String configInfo = generateTableWithLastColumnBorderless("config", Arrays.asList("key", "value"), Arrays.asList(
                 Arrays.asList("serialization", CacheManager.Config.valueSerialization.name()),

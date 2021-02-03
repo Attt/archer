@@ -53,7 +53,7 @@ public class EvictionMetadata extends AbstractCacheMetadata {
                 ", keyPrefix='" + keyPrefix + '\'' +
                 ", condition='" + condition + '\'' +
                 ", keyGenerator='" + keyGenerator + '\'' +
-                ", area='" + area + '\'' +
+                ", area='" + region + '\'' +
                 '}';
     }
 

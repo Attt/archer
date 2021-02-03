@@ -3,8 +3,8 @@ package com.github.attt.archer.cache.redis;
 import com.github.attt.archer.cache.Cache;
 import com.github.attt.archer.cache.CacheFactory;
 import com.github.attt.archer.cache.CacheConfig;
-import com.github.attt.archer.components.internal.InternalKeySerializer;
-import com.github.attt.archer.components.internal.InternalObjectValueSerializer;
+import com.github.attt.archer.cache.internal.InternalKeySerializer;
+import com.github.attt.archer.cache.internal.InternalObjectValueSerializer;
 
 /**
  * Internal redis based cache initializer
@@ -19,13 +19,13 @@ public final class RedisCacheFactory implements CacheFactory {
 
         if (isRedisShard(config)) {
 
-            RedisCache operation = new RedisCache();
-            operation.setKeySerializer(new InternalKeySerializer());
-            operation.setValueSerializer(new InternalObjectValueSerializer(Cache.DefaultEntry.class));
+            RedisCache cache = new RedisCache();
+            cache.setKeySerializer(new InternalKeySerializer());
+            cache.setValueSerializer(new InternalObjectValueSerializer(Cache.DefaultEntry.class));
 
             // init method should be invoked at last
-            operation.init(config);
-            return operation;
+            cache.init(config);
+            return cache;
         }
         return null;
     }

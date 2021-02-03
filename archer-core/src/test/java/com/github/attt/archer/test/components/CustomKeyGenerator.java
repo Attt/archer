@@ -1,6 +1,6 @@
 package com.github.attt.archer.test.components;
 
-import com.github.attt.archer.components.api.KeyGenerator;
+import com.github.attt.archer.cache.KeyGenerator;
 import com.github.attt.archer.annotation.metadata.AbstractCacheMetadata;
 
 import java.lang.reflect.Method;

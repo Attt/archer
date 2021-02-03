@@ -8,69 +8,69 @@ import java.util.Map;
  * Cache processor
  *
  * @param <CONTEXT>     processing context
- * @param <OPERATION>   cache operation
- * @param <E_OPERATION> evict operation
+ * @param <PROPERTIES>   cache properties
+ * @param <E_PROPERTIES> eviction properties
  * @param <V>           value type
  * @author atpexgo
  * @since 1.0
  */
-public interface Invoker<CONTEXT, OPERATION, E_OPERATION, V> {
+public interface Invoker<CONTEXT, PROPERTIES, E_PROPERTIES, V> {
 
     /**
-     * Get {@link V} using {@link OPERATION} with {@link CONTEXT}
+     * Get {@link V} using {@link PROPERTIES} with {@link CONTEXT}
      *
      * @param context
-     * @param cacheOperation
+     * @param properties
      * @return
      */
-    V get(CONTEXT context, OPERATION cacheOperation);
+    V get(CONTEXT context, PROPERTIES properties);
 
     /**
-     * Get {@link V} mapping to {@link CONTEXT} using {@link OPERATION} with {@link CONTEXT} list
+     * Get {@link V} mapping to {@link CONTEXT} using {@link PROPERTIES} with {@link CONTEXT} list
      *
      * @param contextList
-     * @param cacheOperation
+     * @param properties
      * @return
      */
-    Map<CONTEXT, V> getAll(List<CONTEXT> contextList, OPERATION cacheOperation);
+    Map<CONTEXT, V> getAll(List<CONTEXT> contextList, PROPERTIES properties);
 
     /**
-     * Put {@link V} using {@link OPERATION} with {@link CONTEXT}
+     * Put {@link V} using {@link PROPERTIES} with {@link CONTEXT}
      *
      * @param context
      * @param value
-     * @param cacheOperation
+     * @param properties
      */
-    void put(CONTEXT context, V value, OPERATION cacheOperation);
+    void put(CONTEXT context, V value, PROPERTIES properties);
 
     /**
-     * Put {@link V} mapping to {@link CONTEXT} using {@link OPERATION}
+     * Put {@link V} mapping to {@link CONTEXT} using {@link PROPERTIES}
      *
      * @param contextValueMap
-     * @param cacheOperation
+     * @param properties
      */
-    void putAll(Map<CONTEXT, V> contextValueMap, OPERATION cacheOperation);
+    void putAll(Map<CONTEXT, V> contextValueMap, PROPERTIES properties);
 
     /**
-     * Delete {@link V} using {@link E_OPERATION} with {@link CONTEXT}
+     * Delete {@link V} using {@link E_PROPERTIES} with {@link CONTEXT}
      *
      * @param context
-     * @param evictCacheOperation
+     * @param evictionProperties
      */
-    void delete(CONTEXT context, E_OPERATION evictCacheOperation);
+    void delete(CONTEXT context, E_PROPERTIES evictionProperties);
 
     /**
-     * Delete all {@link V} using {@link E_OPERATION} with {@link CONTEXT} list
+     * Delete all {@link V} using {@link E_PROPERTIES} with {@link CONTEXT} list
      *
      * @param contextList
-     * @param evictCacheOperation
+     * @param evictionProperties
      */
-    void deleteAll(List<CONTEXT> contextList, E_OPERATION evictCacheOperation);
+    void deleteAll(List<CONTEXT> contextList, E_PROPERTIES evictionProperties);
 
     /**
-     * Delete all using {@link OPERATION}
+     * Delete all using {@link PROPERTIES}
      *
-     * @param evictCacheOperation
+     * @param evictionProperties
      */
-    void deleteAll(E_OPERATION evictCacheOperation);
+    void deleteAll(E_PROPERTIES evictionProperties);
 }

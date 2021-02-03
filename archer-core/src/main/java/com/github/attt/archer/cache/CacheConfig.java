@@ -4,7 +4,7 @@ package com.github.attt.archer.cache;
 import com.github.attt.archer.roots.Component;
 
 /**
- * Cache operation shard info
+ * Cache config
  *
  * @author atpexgo.wu
  * @since 1.0

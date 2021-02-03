@@ -1,7 +1,7 @@
 package com.github.attt.archer.cache;
 
-import com.github.attt.archer.stats.api.CacheEventCollector;
-import com.github.attt.archer.stats.event.CacheAccessEvent;
+import com.github.attt.archer.metrics.api.CacheEventCollector;
+import com.github.attt.archer.metrics.event.CacheAccessEvent;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -9,7 +9,7 @@ import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 
 /**
- * Hash map operation cache operation
+ * Hash map cache
  * Only for debugging
  *
  * 使用内置hashmap实现的缓存（仅用于测试）
@@ -27,22 +27,24 @@ public class HashMapCache implements Cache {
 
     private final Map<String, List<String>> areaKeysMap = new ConcurrentHashMap<>();
 
+    protected HashMapCache(){}
+
     @Override
-    public boolean containsKey(String area, String key, CacheEventCollector collector) {
+    public boolean containsKey(String region, String key, CacheEventCollector collector) {
         boolean exists = map.containsKey(key);
         collector.collect(new CacheAccessEvent());
         return exists;
     }
 
     @Override
-    public Entry get(String area, String key, CacheEventCollector collector) {
+    public Entry get(String region, String key, CacheEventCollector collector) {
         Entry entry = map.get(key);
         collector.collect(new CacheAccessEvent());
         return entry;
     }
 
     @Override
-    public Map<String, Entry> getAll(String area, Collection<String> keys, CacheEventCollector collector) {
+    public Map<String, Entry> getAll(String region, Collection<String> keys, CacheEventCollector collector) {
         if (keys == null) {
             return new HashMap<>(0);
         }
@@ -55,37 +57,37 @@ public class HashMapCache implements Cache {
     }
 
     @Override
-    public void put(String area, String key, Entry value, CacheEventCollector collector) {
-        recordKey(area, key);
+    public void put(String region, String key, Entry value, CacheEventCollector collector) {
+        recordKey(region, key);
         map.put(key, value);
         collector.collect(new CacheAccessEvent());
     }
 
     @Override
-    public void putAll(String area, Map<String, Entry> map, CacheEventCollector collector) {
-        recordKeys(area, map.keySet());
+    public void putAll(String region, Map<String, Entry> map, CacheEventCollector collector) {
+        recordKeys(region, map.keySet());
         this.map.putAll(map);
         collector.collect(new CacheAccessEvent());
     }
 
     @Override
-    public void putIfAbsent(String area, String key, Entry value, CacheEventCollector collector) {
-        recordKey(area, key);
+    public void putIfAbsent(String region, String key, Entry value, CacheEventCollector collector) {
+        recordKey(region, key);
         map.putIfAbsent(key, value);
         collector.collect(new CacheAccessEvent());
     }
 
     @Override
-    public void putAllIfAbsent(String area, Map<String, Entry> map, CacheEventCollector collector) {
-        recordKeys(area, map.keySet());
+    public void putAllIfAbsent(String region, Map<String, Entry> map, CacheEventCollector collector) {
+        recordKeys(region, map.keySet());
         this.map.putAll(map);
         collector.collect(new CacheAccessEvent());
     }
 
     @Override
-    public boolean remove(String area, String key, CacheEventCollector collector) {
+    public boolean remove(String region, String key, CacheEventCollector collector) {
         map.remove(key);
-        areaKeysMap.compute(area, (area1, keys) -> {
+        areaKeysMap.compute(region, (area1, keys) -> {
             if (keys != null) {
                 keys.remove(key);
             }
@@ -96,10 +98,10 @@ public class HashMapCache implements Cache {
     }
 
     @Override
-    public boolean removeAll(String area, Collection<String> keys, CacheEventCollector collector) {
+    public boolean removeAll(String region, Collection<String> keys, CacheEventCollector collector) {
         for (String key : keys) {
             map.remove(key);
-            areaKeysMap.compute(area, (area1, keys1) -> {
+            areaKeysMap.compute(region, (area1, keys1) -> {
                 if (keys1 != null) {
                     keys1.remove(key);
                 }
@@ -111,8 +113,8 @@ public class HashMapCache implements Cache {
     }
 
     @Override
-    public boolean removeAll(String area, CacheEventCollector collector) {
-        List<String> keys = areaKeysMap.get(area);
+    public boolean removeAll(String region, CacheEventCollector collector) {
+        List<String> keys = areaKeysMap.get(region);
         for (String key : keys) {
             map.remove(key);
             areaKeysMap.remove(key);

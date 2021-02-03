@@ -6,9 +6,9 @@ import com.github.attt.archer.annotation.CacheList;
 import com.github.attt.archer.cache.CacheFactory;
 import com.github.attt.archer.cache.CacheConfig;
 import com.github.attt.archer.cache.ShardingCache;
-import com.github.attt.archer.components.api.KeyGenerator;
-import com.github.attt.archer.components.api.ValueSerializer;
-import com.github.attt.archer.components.internal.InternalObjectValueSerializer;
+import com.github.attt.archer.cache.KeyGenerator;
+import com.github.attt.archer.cache.ValueSerializer;
+import com.github.attt.archer.cache.internal.InternalObjectValueSerializer;
 import com.github.attt.archer.constants.Serialization;
 import com.github.attt.archer.exception.CacheBeanParsingException;
 import com.github.attt.archer.exception.CacheOperationException;
@@ -17,12 +17,12 @@ import com.github.attt.archer.annotation.metadata.EvictionMetadata;
 import com.github.attt.archer.annotation.metadata.ListCacheMetadata;
 import com.github.attt.archer.annotation.metadata.ObjectCacheMetadata;
 import com.github.attt.archer.annotation.metadata.AbstractCacheMetadata;
-import com.github.attt.archer.annotation.config.EvictionConfig;
-import com.github.attt.archer.annotation.config.ListCacheConfig;
-import com.github.attt.archer.annotation.config.ObjectCacheConfig;
-import com.github.attt.archer.stats.api.CacheEventCollector;
-import com.github.attt.archer.stats.api.listener.CacheStatsListener;
-import com.github.attt.archer.stats.collector.NamedCacheEventCollector;
+import com.github.attt.archer.annotation.config.EvictionProperties;
+import com.github.attt.archer.annotation.config.ListCacheProperties;
+import com.github.attt.archer.annotation.config.ObjectCacheProperties;
+import com.github.attt.archer.metrics.api.CacheEventCollector;
+import com.github.attt.archer.metrics.api.listener.CacheMetricsListener;
+import com.github.attt.archer.metrics.collector.NamedCacheEventCollector;
 import com.github.attt.archer.util.CacheUtils;
 import com.github.attt.archer.util.ReflectionUtil;
 import org.slf4j.Logger;
@@ -60,11 +60,11 @@ public class Archer {
 
     private final Map<String, ValueSerializer> valueSerializerMap = new ConcurrentHashMap<>();
 
-    private final Set<CacheStatsListener> statsListeners = new ConcurrentSkipListSet<>();
+    private final Set<CacheMetricsListener> statsListeners = new ConcurrentSkipListSet<>();
 
     private final CacheManager cacheManager = new CacheManager();
 
-    private InternalCacheFactory cacheInitializerDelegate = new InternalCacheFactory();
+    private CacheFactory cacheFactory = new InternalCacheFactory();
 
     private final List<CacheConfig> cacheConfigs = Collections.synchronizedList(new ArrayList<>());
 
@@ -86,7 +86,7 @@ public class Archer {
         return this;
     }
 
-    public Archer addStatsListener(CacheStatsListener statsListener) {
+    public Archer addStatsListener(CacheMetricsListener statsListener) {
         this.statsListeners.add(statsListener);
         return this;
     }
@@ -96,8 +96,8 @@ public class Archer {
         return this;
     }
 
-    public Archer addCacheInitializer(CacheFactory initializer) {
-        this.cacheInitializerDelegate.registerInitializer(initializer);
+    public Archer setCacheInitializer(CacheFactory cacheFactory) {
+        this.cacheFactory = cacheFactory;
         return this;
     }
 
@@ -131,33 +131,33 @@ public class Archer {
     }
 
     private void eviction(Class<?> service, String signature, Method declaredMethod) {
-        if (cacheManager.getMethodSignatureToOperationSourceName().containsKey(signature)) {
+        if (cacheManager.getMethodSignatureToPropertiesName().containsKey(signature)) {
             return;
         }
         List<Annotation> cacheEvictAnnotations = ReflectionUtil.getRepeatableCacheAnnotations(declaredMethod);
         for (Annotation cacheEvictAnnotation : cacheEvictAnnotations) {
             List<AbstractCacheMetadata> metadataList = CacheUtils.resolveMetadata(declaredMethod, cacheEvictAnnotation);
             for (AbstractCacheMetadata metadata : metadataList) {
-                EvictionConfig evictionOperation = new EvictionConfig();
-                evictionOperation.setMetadata((EvictionMetadata) metadata);
+                EvictionProperties evictionProperties = new EvictionProperties();
+                evictionProperties.setMetadata((EvictionMetadata) metadata);
                 CacheEventCollector cacheEventCollector = new NamedCacheEventCollector(metadata.getMethodSignature());
                 if (CacheManager.Config.metricsEnabled) {
-                    for (CacheStatsListener statsListener : this.statsListeners) {
+                    for (CacheMetricsListener statsListener : this.statsListeners) {
                         cacheEventCollector.register(statsListener);
                     }
                 }
-                evictionOperation.setCacheEventCollector(cacheEventCollector);
-                evictionOperation.initialized();
+                evictionProperties.setCacheEventCollector(cacheEventCollector);
+                evictionProperties.initialized();
                 String name = "eviction" + UUID.randomUUID().toString();
-                cacheManager.getEvictionOperationMap().put(name, evictionOperation);
-                cacheManager.getMethodSignatureToOperationSourceName().computeIfAbsent(signature, s -> new ArrayList<>()).add(name);
+                cacheManager.getEvictionPropertiesMap().put(name, evictionProperties);
+                cacheManager.getMethodSignatureToPropertiesName().computeIfAbsent(signature, s -> new ArrayList<>()).add(name);
             }
         }
     }
 
 
     private void cache(Class<?> service, String signature, Method declaredMethod) {
-        if (cacheManager.getMethodSignatureToOperationSourceName().containsKey(signature)) {
+        if (cacheManager.getMethodSignatureToPropertiesName().containsKey(signature)) {
             return;
         }
         List<Annotation> annotations = ReflectionUtil.getCacheAnnotations(declaredMethod, Cache.class);
@@ -166,13 +166,13 @@ public class Archer {
                 List<AbstractCacheMetadata> metadataList = CacheUtils.resolveMetadata(declaredMethod, annotation);
                 for (AbstractCacheMetadata abstractMetadata : metadataList) {
                     ObjectCacheMetadata metadata = (ObjectCacheMetadata) abstractMetadata;
-                    ObjectCacheConfig cacheOperation = new ObjectCacheConfig();
-                    cacheOperation.setMetadata(metadata);
+                    ObjectCacheProperties cacheProperties = new ObjectCacheProperties();
+                    cacheProperties.setMetadata(metadata);
 
                     if (metadata.isMultiple()) {
-                        cacheOperation.setMultipleLoader(CacheUtils.resolveMultiLoader(declaredMethod));
+                        cacheProperties.setMultipleLoader(CacheUtils.resolveMultiLoader(declaredMethod));
                     } else {
-                        cacheOperation.setLoader(CacheUtils.resolveSingleLoader(declaredMethod));
+                        cacheProperties.setLoader(CacheUtils.resolveSingleLoader(declaredMethod));
                     }
 
                     Type cacheEntityType = metadata.isMultiple() ? CacheUtils.parseCacheEntityType(declaredMethod) : declaredMethod.getGenericReturnType();
@@ -184,7 +184,7 @@ public class Archer {
 
                     ValueSerializer userValueSerializer = StringUtils.isEmpty(metadata.getValueSerializer()) ? null : valueSerializerMap.getOrDefault(metadata.getValueSerializer(), null);
                     if (userValueSerializer != null) {
-                        cacheOperation.setValueSerializer(userValueSerializer);
+                        cacheProperties.setValueSerializer(userValueSerializer);
                     } else {
                         internalValueSerializers.computeIfAbsent(cacheEntityType.getTypeName(), new Function<String, InternalObjectValueSerializer>() {
                             @Override
@@ -192,30 +192,30 @@ public class Archer {
                                 return new InternalObjectValueSerializer(cacheEntityType);
                             }
                         });
-                        cacheOperation.setValueSerializer(
+                        cacheProperties.setValueSerializer(
                                 internalValueSerializers.get(cacheEntityType.getTypeName())
                         );
                     }
 
                     CacheEventCollector cacheEventCollector = new NamedCacheEventCollector(metadata.getMethodSignature());
                     if (CacheManager.Config.metricsEnabled) {
-                        for (CacheStatsListener statsListener : this.statsListeners) {
+                        for (CacheMetricsListener statsListener : this.statsListeners) {
                             cacheEventCollector.register(statsListener);
                         }
                     }
-                    cacheOperation.setCacheEventCollector(cacheEventCollector);
+                    cacheProperties.setCacheEventCollector(cacheEventCollector);
 
-                    cacheOperation.initialized();
+                    cacheProperties.initialized();
                     String name = "cache" + UUID.randomUUID().toString();
-                    cacheManager.getCacheOperationMap().put(name, cacheOperation);
-                    cacheManager.getMethodSignatureToOperationSourceName().computeIfAbsent(signature, s -> new ArrayList<>()).add(name);
+                    cacheManager.getCachePropertiesMap().put(name, cacheProperties);
+                    cacheManager.getMethodSignatureToPropertiesName().computeIfAbsent(signature, s -> new ArrayList<>()).add(name);
                 }
             }
         }
     }
 
     private void listCache(Class<?> service, String signature, Method declaredMethod) {
-        if (cacheManager.getMethodSignatureToOperationSourceName().containsKey(signature)) {
+        if (cacheManager.getMethodSignatureToPropertiesName().containsKey(signature)) {
             return;
         }
         List<Annotation> annotations = ReflectionUtil.getCacheAnnotations(declaredMethod, CacheList.class);
@@ -224,9 +224,9 @@ public class Archer {
                 List<AbstractCacheMetadata> metadataList = CacheUtils.resolveMetadata(declaredMethod, annotation);
                 for (AbstractCacheMetadata abstractMetadata : metadataList) {
                     ListCacheMetadata metadata = (ListCacheMetadata) abstractMetadata;
-                    ListCacheConfig listCacheOperation = new ListCacheConfig();
-                    listCacheOperation.setMetadata(metadata);
-                    listCacheOperation.setLoader(CacheUtils.createListableCacheLoader());
+                    ListCacheProperties listCacheProperties = new ListCacheProperties();
+                    listCacheProperties.setMetadata(metadata);
+                    listCacheProperties.setLoader(CacheUtils.createListableCacheLoader());
                     Type cacheEntityType = CacheUtils.parseCacheEntityType(declaredMethod);
                     if (CacheManager.Config.valueSerialization == Serialization.HESSIAN || CacheManager.Config.valueSerialization == Serialization.JAVA) {
                         if (!Serializable.class.isAssignableFrom(ReflectionUtil.toClass(cacheEntityType))) {
@@ -236,7 +236,7 @@ public class Archer {
 
                     ValueSerializer userValueSerializer = StringUtils.isEmpty(metadata.getElementValueSerializer()) ? null : valueSerializerMap.getOrDefault(metadata.getElementValueSerializer(), null);
                     if (userValueSerializer != null) {
-                        listCacheOperation.setValueSerializer(userValueSerializer);
+                        listCacheProperties.setValueSerializer(userValueSerializer);
                     } else {
                         internalValueSerializers.computeIfAbsent(cacheEntityType.getTypeName(), new Function<String, InternalObjectValueSerializer>() {
                             @Override
@@ -244,33 +244,30 @@ public class Archer {
                                 return new InternalObjectValueSerializer(cacheEntityType);
                             }
                         });
-                        listCacheOperation.setValueSerializer(
+                        listCacheProperties.setValueSerializer(
                                 internalValueSerializers.get(cacheEntityType.getTypeName())
                         );
                     }
 
                     CacheEventCollector cacheEventCollector = new NamedCacheEventCollector(metadata.getMethodSignature());
                     if (CacheManager.Config.metricsEnabled) {
-                        for (CacheStatsListener statsListener : this.statsListeners) {
+                        for (CacheMetricsListener statsListener : this.statsListeners) {
                             cacheEventCollector.register(statsListener);
                         }
                     }
-                    listCacheOperation.setCacheEventCollector(cacheEventCollector);
+                    listCacheProperties.setCacheEventCollector(cacheEventCollector);
 
-                    listCacheOperation.initialized();
+                    listCacheProperties.initialized();
                     String name = "listCache" + UUID.randomUUID().toString();
-                    cacheManager.getCacheOperationMap().put(name, listCacheOperation);
-                    cacheManager.getMethodSignatureToOperationSourceName().computeIfAbsent(signature, s -> new ArrayList<>()).add(name);
+                    cacheManager.getCachePropertiesMap().put(name, listCacheProperties);
+                    cacheManager.getMethodSignatureToPropertiesName().computeIfAbsent(signature, s -> new ArrayList<>()).add(name);
                 }
             }
         }
     }
 
     private void sharding() {
-        ShardingCacheConfigure shardingCacheConfigure = new ShardingCacheConfigure(cacheInitializerDelegate, cacheConfigs);
-        shardingCacheConfigure.init();
-        ShardingCache shardingCache = new ShardingCache(shardingCacheConfigure);
-        cacheManager.setShardingCache(shardingCache);
+        cacheManager.setShardingCache(new ShardingCache(cacheFactory, cacheConfigs));
     }
 
     private Supplier<Object> methodInvoker(Object instance, Method method, Object[] args) {

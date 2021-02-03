@@ -2,10 +2,10 @@ package com.github.attt.archer.cache;
 
 
 import com.github.attt.archer.exception.CacheBeanParsingException;
-import com.github.attt.archer.stats.api.CacheEventCollector;
-import com.github.attt.archer.stats.event.CacheAccessEvent;
-import com.github.attt.archer.stats.event.CacheActivelyEvictEvent;
-import com.github.attt.archer.stats.event.CacheTimeElapsingEvent;
+import com.github.attt.archer.metrics.api.CacheEventCollector;
+import com.github.attt.archer.metrics.event.CacheAccessEvent;
+import com.github.attt.archer.metrics.event.CacheActivelyEvictEvent;
+import com.github.attt.archer.metrics.event.CacheTimeElapsingEvent;
 import com.github.attt.archer.util.CommonUtils;
 import com.github.attt.archer.util.ShardingUtil;
 import org.slf4j.Logger;
@@ -14,7 +14,7 @@ import org.slf4j.LoggerFactory;
 import java.util.*;
 
 /**
- * Sharding cache operation source
+ * Sharding cache
  *
  * @author atpexgo.wu
  * @since 1.0
@@ -34,33 +34,37 @@ public class ShardingCache implements Cache {
 
     private TreeMap<Long, Cache> shardingNodes;
 
-    private final HashMapCache hashMapCache = new HashMapCache();
+    private final HashMapCache defaultCache = new HashMapCache();
 
     public ShardingCache(CacheFactory cacheFactory, List<CacheConfig> cacheConfigList) {
         if (!CommonUtils.isEmpty(cacheConfigList)) {
-            shardingNodes = new TreeMap<>();
-            if (cacheFactory != null) {
-                log.debug("Initializing cache of factory : {}", cacheFactory.getClass().getName());
+            init(cacheFactory, cacheConfigList);
+        }
+    }
 
-                for (int i = 0; i < cacheConfigList.size(); i++) {
-                    CacheConfig shard = cacheConfigList.get(i);
-                    try {
-                        Cache cache = cacheFactory.initial(shard);
-                        for (int j = 0; j < VNODE_NUM; j++) {
-                            shardingNodes.put(ShardingUtil.hash("SHARD-" + i + "NODE-" + j), cache);
-                        }
-                    } catch (Throwable t) {
-                        throw new CacheBeanParsingException("Create cache failed", t);
+    private void init(CacheFactory cacheFactory, List<CacheConfig> cacheConfigList) {
+        shardingNodes = new TreeMap<>();
+        if (cacheFactory != null) {
+            log.debug("Initializing cache of factory : {}", cacheFactory.getClass().getName());
+
+            for (int i = 0; i < cacheConfigList.size(); i++) {
+                CacheConfig shard = cacheConfigList.get(i);
+                try {
+                    Cache cache = cacheFactory.initial(shard);
+                    for (int j = 0; j < VNODE_NUM; j++) {
+                        shardingNodes.put(ShardingUtil.hash("SHARD-" + i + "NODE-" + j), cache);
                     }
+                } catch (Throwable t) {
+                    throw new CacheBeanParsingException("Create cache failed", t);
                 }
             }
-            initialized = true;
         }
+        initialized = true;
     }
 
     private Cache sharding(String seed) {
         if (!initialized) {
-            return hashMapCache;
+            return defaultCache;
         }
         SortedMap<Long, Cache> tail = shardingNodes.tailMap(ShardingUtil.hash(seed));
         if (tail.size() == 0) {
@@ -70,10 +74,10 @@ public class ShardingCache implements Cache {
     }
 
     @Override
-    public boolean containsKey(String area, String key, CacheEventCollector collector) {
+    public boolean containsKey(String region, String key, CacheEventCollector collector) {
         CacheTimeElapsingEvent cacheTimeElapsingEvent = new CacheTimeElapsingEvent();
         CacheAccessEvent cacheAccessEvent = new CacheAccessEvent();
-        boolean exist = sharding(key).containsKey(area, key, collector);
+        boolean exist = sharding(key).containsKey(region, key, collector);
         cacheTimeElapsingEvent.done();
         collector.collect(cacheTimeElapsingEvent);
         collector.collect(cacheAccessEvent);
@@ -81,16 +85,16 @@ public class ShardingCache implements Cache {
     }
 
     @Override
-    public Entry get(String area, String key, CacheEventCollector collector) {
+    public Entry get(String region, String key, CacheEventCollector collector) {
         CacheTimeElapsingEvent cacheTimeElapsingEvent = new CacheTimeElapsingEvent();
-        Entry entry = sharding(key).get(area, key, collector);
+        Entry entry = sharding(key).get(region, key, collector);
         cacheTimeElapsingEvent.done();
         collector.collect(cacheTimeElapsingEvent);
         return entry;
     }
 
     @Override
-    public Map<String, Entry> getAll(String area, Collection<String> keys, CacheEventCollector collector) {
+    public Map<String, Entry> getAll(String region, Collection<String> keys, CacheEventCollector collector) {
         CacheTimeElapsingEvent cacheTimeElapsingEvent = new CacheTimeElapsingEvent();
         Map<Cache, List<String>> shardingKeys = new LinkedHashMap<>();
         for (String key : keys) {
@@ -100,13 +104,13 @@ public class ShardingCache implements Cache {
 
         // make sure list order is right
         Map<String, Entry> keysToResult = new HashMap<>();
-        for (Map.Entry<Cache, List<String>> operationSourceKeysEntry : shardingKeys.entrySet()) {
-            Cache cache = operationSourceKeysEntry.getKey();
-            List<String> keysInOneShard = operationSourceKeysEntry.getValue();
+        for (Map.Entry<Cache, List<String>> cacheKeysEntry : shardingKeys.entrySet()) {
+            Cache cache = cacheKeysEntry.getKey();
+            List<String> keysInOneShard = cacheKeysEntry.getValue();
             if (CommonUtils.isEmpty(keysInOneShard)) {
                 continue;
             }
-            Map<String, Entry> entriesInOneShard = cache.getAll(area, keysInOneShard, collector);
+            Map<String, Entry> entriesInOneShard = cache.getAll(region, keysInOneShard, collector);
             keysToResult.putAll(entriesInOneShard);
         }
         cacheTimeElapsingEvent.done();
@@ -115,32 +119,32 @@ public class ShardingCache implements Cache {
     }
 
     @Override
-    public void put(String area, String key, Entry value, CacheEventCollector collector) {
+    public void put(String region, String key, Entry value, CacheEventCollector collector) {
         CacheTimeElapsingEvent cacheTimeElapsingEvent = new CacheTimeElapsingEvent();
-        sharding(key).put(area, key, value, collector);
+        sharding(key).put(region, key, value, collector);
         cacheTimeElapsingEvent.done();
         collector.collect(cacheTimeElapsingEvent);
     }
 
     @Override
-    public void putAll(String area, Map<String, Entry> map, CacheEventCollector collector) {
-        doPutAll(area, map, collector, false);
+    public void putAll(String region, Map<String, Entry> map, CacheEventCollector collector) {
+        doPutAll(region, map, collector, false);
     }
 
     @Override
-    public void putIfAbsent(String area, String key, Entry value, CacheEventCollector collector) {
+    public void putIfAbsent(String region, String key, Entry value, CacheEventCollector collector) {
         CacheTimeElapsingEvent cacheTimeElapsingEvent = new CacheTimeElapsingEvent();
-        sharding(key).putIfAbsent(area, key, value, collector);
+        sharding(key).putIfAbsent(region, key, value, collector);
         cacheTimeElapsingEvent.done();
         collector.collect(cacheTimeElapsingEvent);
     }
 
     @Override
-    public void putAllIfAbsent(String area, Map<String, Entry> map, CacheEventCollector collector) {
-        doPutAll(area, map, collector, true);
+    public void putAllIfAbsent(String region, Map<String, Entry> map, CacheEventCollector collector) {
+        doPutAll(region, map, collector, true);
     }
 
-    private void doPutAll(String area, Map<String, Entry> map, CacheEventCollector collector, boolean considerAbsent) {
+    private void doPutAll(String region, Map<String, Entry> map, CacheEventCollector collector, boolean considerAbsent) {
         CacheTimeElapsingEvent cacheTimeElapsingEvent = new CacheTimeElapsingEvent();
         Map<Cache, Map<String, Entry>> shardingKeys = new HashMap<>();
         for (Map.Entry<String, Entry> kv : map.entrySet()) {
@@ -160,9 +164,9 @@ public class ShardingCache implements Cache {
             Cache cache = cacheEntry.getKey();
             Map<String, Entry> keyValuesInOneShard = cacheEntry.getValue();
             if (considerAbsent) {
-                cache.putAllIfAbsent(area, keyValuesInOneShard, collector);
+                cache.putAllIfAbsent(region, keyValuesInOneShard, collector);
             } else {
-                cache.putAll(area, keyValuesInOneShard, collector);
+                cache.putAll(region, keyValuesInOneShard, collector);
             }
         }
         cacheTimeElapsingEvent.done();
@@ -170,10 +174,10 @@ public class ShardingCache implements Cache {
     }
 
     @Override
-    public boolean remove(String area, String key, CacheEventCollector collector) {
+    public boolean remove(String region, String key, CacheEventCollector collector) {
         CacheTimeElapsingEvent cacheTimeElapsingEvent = new CacheTimeElapsingEvent();
         CacheActivelyEvictEvent cacheActivelyEvictEvent = new CacheActivelyEvictEvent();
-        boolean remove = sharding(key).remove(area, key, collector);
+        boolean remove = sharding(key).remove(region, key, collector);
         cacheTimeElapsingEvent.done();
         collector.collect(cacheTimeElapsingEvent);
         collector.collect(cacheActivelyEvictEvent);
@@ -181,7 +185,7 @@ public class ShardingCache implements Cache {
     }
 
     @Override
-    public boolean removeAll(String area, Collection<String> keys, CacheEventCollector collector) {
+    public boolean removeAll(String region, Collection<String> keys, CacheEventCollector collector) {
         CacheTimeElapsingEvent cacheTimeElapsingEvent = new CacheTimeElapsingEvent();
         CacheActivelyEvictEvent cacheActivelyEvictEvent = new CacheActivelyEvictEvent();
         boolean remove = true;
@@ -200,7 +204,7 @@ public class ShardingCache implements Cache {
         for (Map.Entry<Cache, List<String>> cacheEntry : shardingKeys.entrySet()) {
             Cache cache = cacheEntry.getKey();
             List<String> keysInOneShard = cacheEntry.getValue();
-            remove = remove && cache.removeAll(area, keysInOneShard, collector);
+            remove = remove && cache.removeAll(region, keysInOneShard, collector);
         }
         cacheTimeElapsingEvent.done();
         collector.collect(cacheTimeElapsingEvent);
@@ -209,20 +213,20 @@ public class ShardingCache implements Cache {
     }
 
     @Override
-    public boolean removeAll(String area, CacheEventCollector collector) {
+    public boolean removeAll(String region, CacheEventCollector collector) {
         boolean re = true;
         if (!initialized) {
-            return hashMapCache.removeAll(area, collector);
+            return defaultCache.removeAll(region, collector);
         }
         for (Cache cache : shardingNodes.values()) {
-            re = re & cache.removeAll(area, collector);
+            re = re & cache.removeAll(region, collector);
         }
         return re;
     }
 
     @Override
-    public Entry wrap(String area, String key, byte[] value, long ttl) {
-        return sharding(key).wrap(area, key, value, ttl);
+    public Entry wrap(String region, String key, byte[] value, long ttl) {
+        return sharding(key).wrap(region, key, value, ttl);
     }
 
 }

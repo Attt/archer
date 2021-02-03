@@ -1,6 +1,6 @@
 package com.github.attt.archer.spring.autoconfigure.annotation;
 
-import com.github.attt.archer.components.api.ValueSerializer;
+import com.github.attt.archer.cache.ValueSerializer;
 import com.github.attt.archer.constants.Serialization;
 import com.github.attt.archer.spring.autoconfigure.ActiveModeConfigSelector;
 import com.github.attt.archer.spring.autoconfigure.ConfigSelector;

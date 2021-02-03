@@ -1,9 +1,9 @@
 package com.github.attt.archer.constants;
 
-import com.github.attt.archer.components.preset.FastJsonObjectSerializer;
-import com.github.attt.archer.components.preset.HessianObjectSerializer;
-import com.github.attt.archer.components.preset.JavaObjectSerializer;
-import com.github.attt.archer.components.preset.KryoObjectSerializer;
+import com.github.attt.archer.cache.preset.FastJsonObjectSerializer;
+import com.github.attt.archer.cache.preset.HessianObjectSerializer;
+import com.github.attt.archer.cache.preset.JavaObjectSerializer;
+import com.github.attt.archer.cache.preset.KryoObjectSerializer;
 
 /**
  * @author atpexgo.wu

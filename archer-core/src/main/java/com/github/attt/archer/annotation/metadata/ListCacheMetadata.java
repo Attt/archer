@@ -80,7 +80,7 @@ public class ListCacheMetadata extends CacheMetadata {
                 ", keyPrefix='" + keyPrefix + '\'' +
                 ", condition='" + condition + '\'' +
                 ", keyGenerator='" + keyGenerator + '\'' +
-                ", area='" + area + '\'' +
+                ", area='" + region + '\'' +
                 '}';
     }
 

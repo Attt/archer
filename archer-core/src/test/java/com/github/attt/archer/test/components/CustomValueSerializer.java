@@ -1,6 +1,6 @@
 package com.github.attt.archer.test.components;
 
-import com.github.attt.archer.components.api.ValueSerializer;
+import com.github.attt.archer.cache.ValueSerializer;
 import com.github.attt.archer.test.model.User;
 
 /**

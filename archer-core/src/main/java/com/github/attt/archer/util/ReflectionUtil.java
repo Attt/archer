@@ -2,8 +2,6 @@ package com.github.attt.archer.util;
 
 import com.alibaba.fastjson.JSON;
 import com.github.attt.archer.annotation.*;
-import com.github.attt.archer.config.annotation.annotation.*;
-import com.github.attt.archer.cache.annotation.*;
 import org.reflections.Configuration;
 import org.reflections.Reflections;
 import org.reflections.scanners.*;
@@ -713,6 +711,22 @@ public class ReflectionUtil extends Reflections {
             }
         }
         return list;
+    }
+
+    /**
+     * 根据超类类型查找当前已经加载的类
+     *
+     * @param name 类全限定名
+     * @param superType 超类类型
+     * @param <T> 超类类型
+     * @return 已经加载的目标类
+     */
+    public static <T> Class<? extends T> findClass(String name, Class<T> superType) {
+        try {
+            return (Class<T>) Thread.currentThread().getContextClassLoader().loadClass(name);
+        } catch (ClassNotFoundException e) {
+            return null;
+        }
     }
 
 }

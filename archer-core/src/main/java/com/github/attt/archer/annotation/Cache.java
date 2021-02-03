@@ -63,7 +63,7 @@ public @interface Cache {
      * 缓存内容的序列化器，在spring环境中可以通过bean name指定，
      * 非spring环境中需要在启动配置中设置并实例化
      *
-     * @see com.github.attt.archer.components.api.ValueSerializer
+     * @see com.github.attt.archer.cache.ValueSerializer
      */
     String valueSerializer() default "";
 
@@ -71,7 +71,7 @@ public @interface Cache {
      * 缓存key生成器，在spring环境中可以通过bean name指定，
      * 非spring环境中需要在启动配置中设置并实例化
      *
-     * @see com.github.attt.archer.components.api.KeyGenerator
+     * @see com.github.attt.archer.cache.KeyGenerator
      */
     String keyGenerator() default "";
 

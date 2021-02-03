@@ -58,7 +58,7 @@ public class ManualCacheHandler {
      * @param key
      */
     public static void evict(String key) {
-        Collection<AbstractInvoker> processors = cacheManager.getProcessors();
+        Collection<AbstractInvoker> processors = cacheManager.getInvokers();
         for (AbstractInvoker processor : processors) {
             processor.delete(DEFAULT_REGION, key);
         }
@@ -71,7 +71,7 @@ public class ManualCacheHandler {
      * @param key
      */
     public static void evict(String area, String key) {
-        Collection<AbstractInvoker> processors = cacheManager.getProcessors();
+        Collection<AbstractInvoker> processors = cacheManager.getInvokers();
         for (AbstractInvoker processor : processors) {
             processor.delete(area, key);
         }
@@ -83,7 +83,7 @@ public class ManualCacheHandler {
      * @param area
      */
     public static void evictAll(String area) {
-        Collection<AbstractInvoker> processors = cacheManager.getProcessors();
+        Collection<AbstractInvoker> processors = cacheManager.getInvokers();
         for (AbstractInvoker processor : processors) {
             processor.deleteAll(area);
         }
@@ -96,7 +96,7 @@ public class ManualCacheHandler {
      * @param key
      */
     public static boolean exist(String key) {
-        Collection<AbstractInvoker> processors = cacheManager.getProcessors();
+        Collection<AbstractInvoker> processors = cacheManager.getInvokers();
         for (AbstractInvoker processor : processors) {
             boolean exist = processor.exist(DEFAULT_REGION, key);
             if (exist) {
@@ -113,7 +113,7 @@ public class ManualCacheHandler {
      * @param key
      */
     public static boolean exist(String area, String key) {
-        Collection<AbstractInvoker> processors = cacheManager.getProcessors();
+        Collection<AbstractInvoker> processors = cacheManager.getInvokers();
         for (AbstractInvoker processor : processors) {
             boolean exist = processor.exist(area, key);
             if (exist) {

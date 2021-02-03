@@ -73,7 +73,7 @@ public class CacheProperties {
 
     }
 
-    public List<CacheConfig> toShardsInfo() {
+    public List<CacheConfig> getCacheConfigs() {
         if (redis != null && !CollectionUtils.isEmpty(redis.shards)) {
             for (RedisShard shard : redis.shards) {
                 if (shard.getReadTimeout() == DEFAULT_TIMEOUT && redis.readTimeout != DEFAULT_TIMEOUT) {

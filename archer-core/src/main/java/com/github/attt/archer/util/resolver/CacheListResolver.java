@@ -25,7 +25,7 @@ public class CacheListResolver implements AnnotationResolver<CacheList, List<Lis
                 annotation.key(),
                 annotation.condition(),
                 chooseValue(classCacheMetadata.getKeyGenerator(), annotation.keyGenerator()),
-                chooseValue(classCacheMetadata.getArea(), annotation.region())
+                chooseValue(classCacheMetadata.getRegion(), annotation.region())
         );
 
         metadata.setElementKey(annotation.element().key());
